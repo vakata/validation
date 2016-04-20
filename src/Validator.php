@@ -32,6 +32,7 @@ class Validator
                         $errors = array_merge($errors, $this->validate(implode('.', $newKey), $validator, $data));
                     }
                 }
+                break;
             }
             $temp = is_array($temp) && isset($temp[$keyPart]) ? $temp[$keyPart] : null;
         }
@@ -113,6 +114,19 @@ class Validator
         return $this;
     }
     /**
+     * Add a validation using a regular expression
+     * @method regex
+     * @param  string $regex   the regex to validate against
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function regex($regex, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($regex) {
+            return preg_match($regex, $value);
+        }, $message);
+    }
+    /**
      * Add a numeric validation
      * @method numeric
      * @param  string  $message optional message to include in the report if the validation fails
@@ -125,17 +139,38 @@ class Validator
         }, $message);
     }
     /**
-     * Add a validation using a regular expression
-     * @method regex
-     * @param  string $regex   the regex to validate against
-     * @param  string $message an optional message to include in the report if the validation fails
+     * Add a alphabetical validation
+     * @method alpha
+     * @param  string  $chars optional string of allowed chars, defaults to `null` meaning a-z
+     * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function regex($regex, $message = '')
+    public function alpha($chars = null, $message = '')
     {
-        return $this->callback(function ($value, $data) use ($regex) {
-            return preg_match($regex, $value);
-        }, $message);
+        if ($chars === null) {
+            $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        }
+        return $this->regex('(^['.preg_quote($chars).']*$)', $message);
+    }
+    /**
+     * Add a alphanumeric validation
+     * @method alpha
+     * @param  string  $message optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function alphanumeric($message = '')
+    {
+        return $this->alpha('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789', $message);
+    }
+    /**
+     * Add a not empty validation (fails on empty string)
+     * @method notEmpty
+     * @param  string  $message optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function notEmpty($message = '')
+    {
+        return $this->regex('(^.+$)', $message);
     }
     /**
      * Add a valid mail validation
