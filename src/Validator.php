@@ -410,7 +410,8 @@ class Validator
      * Add a min date validation
      * @method minDate
      * @param  string|DateTime|int $min    the minimum that the value should be equal to or greater than
-     * @param  string $message an optional message to include in the report if the validation fails
+     * @param  string              $format the optional date format to conform to
+     * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function minDate($min, $format = null, $message = '')
@@ -425,7 +426,8 @@ class Validator
      * Add a max date validation
      * @method minDate
      * @param  string|DateTime|int $max    the minimum that the value should be equal to or greater than
-     * @param  string $message an optional message to include in the report if the validation fails
+     * @param  string              $format the optional date format to conform to
+     * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function maxDate($max, $format = null, $message = '')
@@ -439,9 +441,10 @@ class Validator
     /**
      * Add a range date validation
      * @method between
-     * @param  integer $min     the minimum that the value should be equal to or greater than
-     * @param  integer $max     the minimum that the value should be equal to or less than
-     * @param  string  $message an optional message to include in the report if the validation fails
+     * @param  string|DateTime|int $min     the minimum that the value should be equal to or greater than
+     * @param  string|DateTime|int $max     the minimum that the value should be equal to or less than
+     * @param  string              $format the optional date format to conform to
+     * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function betweenDate($min, $max, $format = null, $message = '')
@@ -451,6 +454,23 @@ class Validator
         return $this->callback(function ($value, $data) use ($min, $max, $format) {
             $value = $this->parseDate($value, $format);
             return $min !== false && $max !== false && $value !== false && $value >= $min && $value <= $max;
+        }, $message);
+    }
+    /**
+     * Add an age validation (which could be relative to a given date)
+     * @method age
+     * @param  int                 $age     the minimum age on a date
+     * @param  string|DateTime|int $rel     the date to compare to (defaults to today)
+     * @param  string              $format  the optional date format to conform to
+     * @param  string              $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function age($age, $rel = null, $format = null, $message = '')
+    {
+        $rel = $rel ? $this->parseDate($rel, $format) : time();
+        return $this->callback(function ($value, $data) use ($age, $rel, $format) {
+            $value = $this->parseDate($value, $format);
+            return $value !== false && $rel !== false && strtotime('+' . (int)$age . ' years', $value) <= $rel;
         }, $message);
     }
     /**
