@@ -279,7 +279,7 @@ class Validator
      */
     public function min($min, $message = '')
     {
-        return $this->callback(function ($value, $data) {
+        return $this->callback(function ($value, $data) use ($min) {
             return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value >= $min;
         }, $message);
     }
@@ -292,7 +292,7 @@ class Validator
      */
     public function max($max, $message = '')
     {
-        return $this->callback(function ($value, $data) {
+        return $this->callback(function ($value, $data) use ($max) {
             return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value <= $max;
         }, $message);
     }
@@ -306,7 +306,7 @@ class Validator
      */
     public function between($min, $max, $message = '')
     {
-        return $this->callback(function ($value, $data) {
+        return $this->callback(function ($value, $data) use ($min, $max) {
             return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value >= $min && (int)$value <= $max;
         }, $message);
     }
@@ -391,6 +391,10 @@ class Validator
             $format = $formats[$format];
         }
         $value = date_create_from_format($format, $value);
+        $debug = date_get_last_errors();
+        if ($debug['warning_count'] !== 0 || $debug['error_count'] !== 0) {
+            $value = false;
+        }
         return $value === false ? false : $value->getTimestamp();
     }
     /**
@@ -514,6 +518,17 @@ class Validator
                    in_array(parse_url($value, PHP_URL_SCHEME), $protocols);
         }, $message);
     }
+    protected function luhn($value)
+    {
+        if (!ctype_digit($value)) {
+            return false;
+        }
+        $value = array_reverse(str_split($value));
+        foreach ($value as $k => $digit) {
+            $value[$k] = $digit ? (($digit * ($k % 2 ? 2 : 1)) % 9 ?: 9) : 0;
+        }
+        return array_sum($value) % 10 === 0;
+    }
     /**
      * Add a mod10 validation
      * @method mod10
@@ -523,14 +538,8 @@ class Validator
     public function mod10($message)
     {
         return $this->callback(function ($value, $data) {
-            if (!ctype_digit($value)) {
-                return false;
-            }
-            $value = array_reverse(str_split($value));
-            foreach ($value as $k => $digit) {
-                $value[$k] = $digit ? (($digit * ($k % 2 ? 2 : 1)) % 9 ?: 9) : 0;
-            }
-            return array_sum($value) % 10 === 0;
+            $value = preg_replace('(\D)', '', $value);
+            return $this->luhn($value);
         }, $message);
     }
     /**
@@ -543,11 +552,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
-            $value = array_reverse(str_split($value));
-            foreach ($value as $k => $digit) {
-                $value[$k] = $digit ? (($digit * ($k % 2 ? 2 : 1)) % 9 ?: 9) : 0;
-            }
-            return array_sum($value) % 10 === 0;
+            return $this->luhn($value);
         }, $message);
     }
     /**
@@ -560,7 +565,6 @@ class Validator
     public function creditcard(array $types = null, $message = '')
     {
         $cards = [
-            'any' => '(^\d+$)',
             'visa' => '(^4[0-9]{12}(?:[0-9]{3})?$)',
             'mastercard' => '(^5[1-5][0-9]{14}$)',
             'americanexpress' => '(^3[47][0-9]{13}$)',
@@ -577,7 +581,11 @@ class Validator
                 }
             }
         }
-        return $this->mod10($message)->callback(function ($value, $data) use ($allowed) {
+        return $this->callback(function ($value, $data) use ($allowed) {
+            $value = preg_replace('(\D)', '', $value);
+            if (!$this->luhn($value)) {
+                return false;
+            }
             foreach ($allowed as $card) {
                 if (preg_match($card, $value)) {
                     return true;
@@ -636,6 +644,48 @@ class Validator
     {
         return $this->regex('(^(([0-9a-fA-F]{2}-){5}|([0-9a-fA-F]{2}:){5})[0-9a-fA-F]{2}$)', $message);
     }
+    protected function egn($value)
+    {
+        if (!ctype_digit($value) || strlen($value) !== 10) {
+            return false;
+        }
+        $year  = substr($value, 0, 2);
+        $month = substr($value, 2, 2);
+        $day   = substr($value, 4, 2);
+        if ($month > 40) {
+            $month -= 40;
+            $year  += 2000;
+        } elseif ($month > 20) {
+            $month -= 20;
+            $year  += 1800;
+        } else {
+            $year  += 1900;
+        }
+        if (!checkdate($month, $day, $year)) {
+            return false;
+        }
+
+        $value = str_split($value);
+        $check = array_pop($value);
+        $weights = [ 2, 4, 8, 5, 10, 9, 7, 3, 6 ];
+        foreach ($value as $k => $v) {
+            $value[$k] = $v * $weights[$k];
+        }
+        return (array_sum($value) % 11) % 10 === (int)$check;
+    }
+    protected function lnc($value)
+    {
+        if (!ctype_digit($value) || strlen($value) !== 10) {
+            return false;
+        }
+        $value = str_split($value);
+        $check = array_pop($value);
+        $weights = [ 21, 19, 17, 13, 11, 9, 7, 3, 1 ];
+        foreach ($value as $k => $v) {
+            $value[$k] = $v * $weights[$k];
+        }
+        return array_sum($value) % 10 === (int)$check;
+    }
     /**
      * Add a Bulgarian EGN validation
      * @method bgEGN
@@ -645,32 +695,7 @@ class Validator
     public function bgEGN($message)
     {
         return $this->callback(function ($value, $data) {
-            if (!ctype_digit($value) || strlen($value) !== 10) {
-                return false;
-            }
-            $year  = substr($value, 0, 2);
-            $month = substr($value, 2, 2);
-            $day   = substr($value, 4, 2);
-            if ($month > 40) {
-                $month -= 40;
-                $year  += 2000;
-            } elseif ($month > 20) {
-                $month -= 20;
-                $year  += 1800;
-            } else {
-                $year  += 1800;
-            }
-            if (!checkdate($month, $day, $year)) {
-                return false;
-            }
-
-            $value = str_split($value);
-            $check = array_pop($value);
-            $weights = [ 2, 4, 8, 5, 10, 9, 7, 3, 6 ];
-            foreach ($value as $k => $v) {
-                $value[$k] = $v * $weights[$k];
-            }
-            return (array_sum($value) % 11) % 10 === (int)$check;
+            return $this->egn($value);
         }, $message);
     }
     /**
@@ -682,16 +707,7 @@ class Validator
     public function bgLNC($message)
     {
         return $this->callback(function ($value, $data) {
-            if (!ctype_digit($value) || strlen($value) !== 10) {
-                return false;
-            }
-            $value = str_split($value);
-            $check = array_pop($value);
-            $weights = [ 21, 19, 17, 13, 11, 9, 7, 3, 1 ];
-            foreach ($value as $k => $v) {
-                $value[$k] = $v * $weights[$k];
-            }
-            return array_sum($value) % 10 === (int)$check;
+            return $this->lnc($value);
         }, $message);
     }
     /**
@@ -703,44 +719,7 @@ class Validator
     public function bgIDN($message)
     {
         return $this->callback(function ($value, $data) {
-            if (!ctype_digit($value) || strlen($value) !== 10) {
-                return false;
-            }
-            $value = str_split($value);
-            $check = array_pop($value);
-
-            $weights = [ 21, 19, 17, 13, 11, 9, 7, 3, 1 ];
-            $sum = 0;
-            foreach ($value as $k => $v) {
-                $sum += $v * $weights[$k];
-            }
-            if ($sum % 10 === (int)$check) {
-                return true;
-            }
-
-            $year  = substr($value, 0, 2);
-            $month = substr($value, 2, 2);
-            $day   = substr($value, 4, 2);
-            if ($month > 40) {
-                $month -= 40;
-                $year  += 2000;
-            } elseif ($month > 20) {
-                $month -= 20;
-                $year  += 1800;
-            } else {
-                $year  += 1800;
-            }
-            if (!checkdate($month, $day, $year)) {
-                return false;
-            }
-
-            $value = str_split($value);
-            $check = array_pop($value);
-            $weights = [ 2, 4, 8, 5, 10, 9, 7, 3, 6 ];
-            foreach ($value as $k => $v) {
-                $value[$k] = $v * $weights[$k];
-            }
-            return (array_sum($value) % 11) % 10 === (int)$check;
+            return $this->egn($value) || $this->lnc($value);
         }, $message);
     }
     /**
@@ -751,8 +730,8 @@ class Validator
      */
     public function bgMaleEGN($message)
     {
-        return $this->bgEGN($message)->callback(function ($value, $data) {
-            return substr($value, 8, 1) % 2 === 0;
+        return $this->callback(function ($value, $data) {
+            return $this->egn($value) && substr($value, 8, 1) % 2 === 0;
         }, $message);
     }
     /**
@@ -763,8 +742,8 @@ class Validator
      */
     public function bgFemaleEGN($message)
     {
-        return $this->bgEGN($message)->callback(function ($value, $data) {
-            return substr($value, 8, 1) % 2 === 1;
+        return $this->callback(function ($value, $data) {
+            return $this->egn($value) && substr($value, 8, 1) % 2 === 1;
         }, $message);
     }
     /**
@@ -818,6 +797,6 @@ class Validator
      */
     public function bgName($message)
     {
-        return $this->regex('(^([А-Я][a-я]*[ -]*){2,}$)', $message);
+        return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message);
     }
 }
