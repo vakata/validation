@@ -19,7 +19,16 @@ $ composer require vakata/validation
 ## Usage
 
 ``` php
-
+$v = new \vakata\validation\Validator();
+$v
+    ->required('name', 'requiredN')->alpha(null, "alphaN")->notEmpty("empty")
+    ->required('family', 'requiredF')->alpha(null, "alphaF")
+    ->required('age', 'requiredA')->numeric("numericA")
+    ->optional("newsletter")->numeric("numericN")
+    ->optional("children.*.name")->alpha(null, "alphaC")
+    ->optional("children.*.age")->numeric(null, "numericC");
+$errors = $v->run($_POST);
+// inspect the array - if empty - the data is valid
 ```
 
 Read more in the [API docs](docs/README.md)
