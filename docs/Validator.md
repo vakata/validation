@@ -33,8 +33,23 @@ A validation class, supporting arrays and nested arrays of data.
 |[minDate](#vakata\validation\validatormindate)|Add a min date validation|
 |[maxDate](#vakata\validation\validatormaxdate)|Add a max date validation|
 |[betweenDate](#vakata\validation\validatorbetweendate)|Add a range date validation|
+|[age](#vakata\validation\validatorage)|Add an age validation (which could be relative to a given date)|
 |[json](#vakata\validation\validatorjson)|Add a JSON validation|
 |[ip](#vakata\validation\validatorip)|Add an IP address validation|
+|[url](#vakata\validation\validatorurl)|Add an URL validation|
+|[mod10](#vakata\validation\validatormod10)|Add a mod10 validation|
+|[imei](#vakata\validation\validatorimei)|Add a imei validation|
+|[creditcard](#vakata\validation\validatorcreditcard)|Add credit card validation|
+|[iban](#vakata\validation\validatoriban)|Add an IBAN validation|
+|[uuid](#vakata\validation\validatoruuid)|Add an UUID validation|
+|[mac](#vakata\validation\validatormac)|Add a MAC validation|
+|[bgEGN](#vakata\validation\validatorbgegn)|Add a Bulgarian EGN validation|
+|[bgLNC](#vakata\validation\validatorbglnc)|Add a Bulgarian LNC validation|
+|[bgIDN](#vakata\validation\validatorbgidn)|Add a Bulgarian identification number validation (EGN or LNC)|
+|[bgMaleEGN](#vakata\validation\validatorbgmaleegn)|Add a Bulgarian male EGN validation|
+|[bgFemaleEGN](#vakata\validation\validatorbgfemaleegn)|Add a Bulgarian female EGN validation|
+|[bgBulstat](#vakata\validation\validatorbgbulstat)|Add a Bulgarian BULSTAT validation|
+|[bgName](#vakata\validation\validatorbgname)|Add a Bulgarian name validation|
 
 ---
 
@@ -368,14 +383,14 @@ Add a min integer validation
 
 ```php
 public function min (  
-    integer $min,  
+    mixed $min,  
     string $message  
 ) : self    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
-| `$min` | `integer` | the minimum that the value should be equal to or greater than |
+| `$min` | `mixed` | the minimum that the value should be equal to or greater than |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
 | `return` | `self` |  |
@@ -389,14 +404,14 @@ Add a max integer validation
 
 ```php
 public function max (  
-    integer $max,  
+    mixed $max,  
     string $message  
 ) : self    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
-| `$max` | `integer` | the minimum that the value should be equal to or less than |
+| `$max` | `mixed` | the minimum that the value should be equal to or less than |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
 | `return` | `self` |  |
@@ -560,6 +575,7 @@ Add a min date validation
 ```php
 public function minDate (  
     string|\DateTime|int $min,  
+    string $format,  
     string $message  
 ) : self    
 ```
@@ -567,6 +583,7 @@ public function minDate (
 |  | Type | Description |
 |-----|-----|-----|
 | `$min` | `string`, `\DateTime`, `int` | the minimum that the value should be equal to or greater than |
+| `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
 | `return` | `self` |  |
@@ -581,6 +598,7 @@ Add a max date validation
 ```php
 public function maxDate (  
     string|\DateTime|int $max,  
+    string $format,  
     string $message  
 ) : self    
 ```
@@ -588,6 +606,7 @@ public function maxDate (
 |  | Type | Description |
 |-----|-----|-----|
 | `$max` | `string`, `\DateTime`, `int` | the minimum that the value should be equal to or greater than |
+| `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
 | `return` | `self` |  |
@@ -601,16 +620,43 @@ Add a range date validation
 
 ```php
 public function betweenDate (  
-    integer $min,  
-    integer $max,  
+    string|\DateTime|int $min,  
+    string|\DateTime|int $max,  
+    string $format,  
     string $message  
 ) : self    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
-| `$min` | `integer` | the minimum that the value should be equal to or greater than |
-| `$max` | `integer` | the minimum that the value should be equal to or less than |
+| `$min` | `string`, `\DateTime`, `int` | the minimum that the value should be equal to or greater than |
+| `$max` | `string`, `\DateTime`, `int` | the minimum that the value should be equal to or less than |
+| `$format` | `string` | the optional date format to conform to |
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::age
+Add an age validation (which could be relative to a given date)  
+
+
+```php
+public function age (  
+    int $age,  
+    string|\DateTime|int $rel,  
+    string $format,  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$age` | `int` | the minimum age on a date |
+| `$rel` | `string`, `\DateTime`, `int` | the date to compare to (defaults to today) |
+| `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
 | `return` | `self` |  |
@@ -643,6 +689,276 @@ Add an IP address validation
 
 ```php
 public function ip (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::url
+Add an URL validation  
+
+
+```php
+public function url (  
+    array|null $protocols,  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$protocols` | `array`, `null` | array of allowed protocols (defaults to ['http','https']) |
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::mod10
+Add a mod10 validation  
+
+
+```php
+public function mod10 (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::imei
+Add a imei validation  
+
+
+```php
+public function imei (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::creditcard
+Add credit card validation  
+
+
+```php
+public function creditcard (  
+    array|null $types,  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$types` | `array`, `null` | optional array of allowed cards (visa, mastercard, americanexpress, dinersclub, discover, jcb) |
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::iban
+Add an IBAN validation  
+
+
+```php
+public function iban (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::uuid
+Add an UUID validation  
+
+
+```php
+public function uuid (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::mac
+Add a MAC validation  
+
+
+```php
+public function mac (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgEGN
+Add a Bulgarian EGN validation  
+
+
+```php
+public function bgEGN (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgLNC
+Add a Bulgarian LNC validation  
+
+
+```php
+public function bgLNC (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgIDN
+Add a Bulgarian identification number validation (EGN or LNC)  
+
+
+```php
+public function bgIDN (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgMaleEGN
+Add a Bulgarian male EGN validation  
+
+
+```php
+public function bgMaleEGN (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgFemaleEGN
+Add a Bulgarian female EGN validation  
+
+
+```php
+public function bgFemaleEGN (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgBulstat
+Add a Bulgarian BULSTAT validation  
+
+
+```php
+public function bgBulstat (  
+    string $message  
+) : self    
+```
+
+|  | Type | Description |
+|-----|-----|-----|
+| `$message` | `string` | an optional message to include in the report if the validation fails |
+|  |  |  |
+| `return` | `self` |  |
+
+---
+
+
+### vakata\validation\Validator::bgName
+Add a Bulgarian name validation  
+
+
+```php
+public function bgName (  
     string $message  
 ) : self    
 ```

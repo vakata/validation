@@ -273,27 +273,27 @@ class Validator
     /**
      * Add a min integer validation
      * @method min
-     * @param  integer $min    the minimum that the value should be equal to or greater than
+     * @param  mixed  $min    the minimum that the value should be equal to or greater than
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function min($min, $message = '')
     {
         return $this->callback(function ($value, $data) use ($min) {
-            return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value >= $min;
+            return $value >= $min;
         }, $message);
     }
     /**
      * Add a max integer validation
      * @method max
-     * @param  integer $max     the minimum that the value should be equal to or less than
+     * @param  mixed   $max     the minimum that the value should be equal to or less than
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function max($max, $message = '')
     {
         return $this->callback(function ($value, $data) use ($max) {
-            return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value <= $max;
+            return $value <= $max;
         }, $message);
     }
     /**
@@ -307,7 +307,7 @@ class Validator
     public function between($min, $max, $message = '')
     {
         return $this->callback(function ($value, $data) use ($min, $max) {
-            return filter_var($value, FILTER_VALIDATE_INT) !== false && (int)$value >= $min && (int)$value <= $max;
+            return $value >= $min && $value <= $max;
         }, $message);
     }
     /**
@@ -535,7 +535,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function mod10($message)
+    public function mod10($message = '')
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
@@ -548,7 +548,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function imei($message)
+    public function imei($message = '')
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
@@ -600,7 +600,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function iban($message)
+    public function iban($message = '')
     {
         return $this->callback(function ($value, $data) {
             $value = str_replace([' ','-'], '', strtolower($value));
@@ -630,7 +630,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function uuid($message)
+    public function uuid($message = '')
     {
         return $this->regex('(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i', $message);
     }
@@ -640,7 +640,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function mac($message)
+    public function mac($message = '')
     {
         return $this->regex('(^(([0-9a-fA-F]{2}-){5}|([0-9a-fA-F]{2}:){5})[0-9a-fA-F]{2}$)', $message);
     }
@@ -692,7 +692,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgEGN($message)
+    public function bgEGN($message = '')
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value);
@@ -704,7 +704,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgLNC($message)
+    public function bgLNC($message = '')
     {
         return $this->callback(function ($value, $data) {
             return $this->lnc($value);
@@ -716,7 +716,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgIDN($message)
+    public function bgIDN($message = '')
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) || $this->lnc($value);
@@ -728,7 +728,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgMaleEGN($message)
+    public function bgMaleEGN($message = '')
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 0;
@@ -740,7 +740,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgFemaleEGN($message)
+    public function bgFemaleEGN($message = '')
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 1;
@@ -752,7 +752,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgBulstat($message)
+    public function bgBulstat($message = '')
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(^BG)', '', $value);
@@ -795,7 +795,7 @@ class Validator
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgName($message)
+    public function bgName($message = '')
     {
         return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message);
     }
