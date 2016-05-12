@@ -34,7 +34,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required", $this->map($v->run(null)));
 		$this->assertEquals("required", $this->map($v->run("non-array")));
 		$this->assertEquals("required", $this->map($v->run(["wrong"=>''])));
-		$this->assertEquals("", $this->map($v->run(["req"=>''])));
+		$this->assertEquals("required", $this->map($v->run(["req"=>''])));
 		$this->assertEquals("", $this->map($v->run(["req"=>'1'])));
 		$this->assertEquals("", $this->map($v->run(["req"=>'1', "extra"=>'1'])));
 	}
@@ -44,9 +44,11 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required1,required2", $this->map($v->run(null)));
 		$this->assertEquals("required1,required2", $this->map($v->run("non-array")));
 		$this->assertEquals("required1,required2", $this->map($v->run(["wrong"=>''])));
-		$this->assertEquals("required2", $this->map($v->run(["req1"=>''])));
-		$this->assertEquals("required1", $this->map($v->run(["req2"=>''])));
-		$this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>''])));
+		$this->assertEquals("required1,required2", $this->map($v->run(["req1"=>''])));
+		$this->assertEquals("required1,required2", $this->map($v->run(["req2"=>''])));
+		$this->assertEquals("required2", $this->map($v->run(["req1"=>'1',"req2"=>''])));
+		$this->assertEquals("required1", $this->map($v->run(["req1"=>'',"req2"=>'1'])));
+		$this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>'1'])));
 	}
 	public function testRequiredChain() {
 		$v = new \vakata\validation\Validator();
@@ -54,7 +56,8 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required,numeric", $this->map($v->run(null)));
 		$this->assertEquals("required,numeric", $this->map($v->run("non-array")));
 		$this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
-		$this->assertEquals("numeric", $this->map($v->run(["req"=>''])));
+		$this->assertEquals("required,numeric", $this->map($v->run(["req"=>''])));
+		$this->assertEquals("numeric", $this->map($v->run(["req"=>'a'])));
 		$this->assertEquals("", $this->map($v->run(["req"=>'2'])));
 	}
 	public function testRequiredOptionalArray() {
@@ -63,9 +66,10 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required", $this->map($v->run(null)));
 		$this->assertEquals("required", $this->map($v->run("non-array")));
 		$this->assertEquals("required", $this->map($v->run(["wrong"=>''])));
-		$this->assertEquals("required,numeric", $this->map($v->run(["req2"=>''])));
-		$this->assertEquals("numeric", $this->map($v->run(["req1"=>'1',"req2"=>''])));
-		$this->assertEquals("", $this->map($v->run(["req1"=>''])));
+		$this->assertEquals("required", $this->map($v->run(["req2"=>''])));
+		$this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>''])));
+		$this->assertEquals("required", $this->map($v->run(["req1"=>''])));
+		$this->assertEquals("", $this->map($v->run(["req1"=>'1'])));
 		$this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>'1'])));
 	}
 	public function testRequiredNestedArray() {
@@ -77,7 +81,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>['test']])));
-		$this->assertEquals("numeric", $this->map($v->run(["test"=>['nested'=>'']])));
+		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>['nested'=>'']])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>['nested'=>[]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>['nested'=>'1']])));
 	}
@@ -90,7 +94,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(["test"=>''])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>['test']])));
-		$this->assertEquals("numeric", $this->map($v->run(["test"=>['nested'=>'']])));
+		$this->assertEquals("", $this->map($v->run(["test"=>['nested'=>'']])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>['nested'=>[]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>['nested'=>'1']])));
 	}
@@ -136,10 +140,10 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>['asdf']])));
-		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>'']]])));
-		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>''], ['id'=>'asdf']]])));
+		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>'a']]])));
+		$this->assertEquals("required,numeric,numeric", $this->map($v->run(["test"=>[['id'=>''], ['id'=>'asdf']]])));
 		$this->assertEquals("required,required,numeric,numeric", $this->map($v->run(["test"=>[['id'=>null], []]])));
-		$this->assertEquals("required,numeric,numeric", $this->map($v->run(["test"=>[['id'=>''], []]])));
+		$this->assertEquals("required,numeric,numeric", $this->map($v->run(["test"=>[['id'=>'a'], []]])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>1], ['id'=>'asdf']]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>1], ['id'=>2]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>1]]])));
@@ -154,10 +158,10 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(["test"=>''])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>['asdf']])));
-		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>'']]])));
-		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>''], ['id'=>'asdf']]])));
+		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>'']]])));
+		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>'asdf'], ['id'=>'asdf']]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>null], []]])));
-		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>''], []]])));
+		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>''], []]])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>1], ['id'=>'asdf']]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>1], ['id'=>2]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>1]]])));
@@ -173,11 +177,11 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>['asdf']])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>[['id'=>'']]])));
-		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>['']], ['id'=>['asdf']]]])));
+		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>['asdf']], ['id'=>['asdf']]]])));
 		$this->assertEquals("required,required,numeric,numeric", $this->map($v->run(["test"=>[['id'=>[]], []]])));
 		$this->assertEquals("required,numeric", $this->map($v->run(["test"=>[['id'=>[1]], []]])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>[1]], ['id'=>['asdf']]]])));
-		$this->assertEquals("numeric,numeric,numeric", $this->map($v->run(["test"=>[['id'=>['',1,'b']], ['id'=>['a',2]]]])));
+		$this->assertEquals("required,numeric,numeric,numeric", $this->map($v->run(["test"=>[['id'=>['',1,'b']], ['id'=>['a',2]]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[1]], ['id'=>[2]]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[1]]]])));
 	}
@@ -192,11 +196,11 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(["test"=>[]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>['asdf']])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>'']]])));
-		$this->assertEquals("numeric,numeric", $this->map($v->run(["test"=>[['id'=>['']], ['id'=>['asdf']]]])));
+		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>['']], ['id'=>['asdf']]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[]], []]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[1]], []]])));
 		$this->assertEquals("numeric", $this->map($v->run(["test"=>[['id'=>[1]], ['id'=>['asdf']]]])));
-		$this->assertEquals("numeric,numeric,numeric", $this->map($v->run(["test"=>[['id'=>['',1,'b']], ['id'=>['a',2]]]])));
+		$this->assertEquals("numeric,numeric,numeric", $this->map($v->run(["test"=>[['id'=>['v',1,'b']], ['id'=>['a',2]]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[1]], ['id'=>[2]]]])));
 		$this->assertEquals("", $this->map($v->run(["test"=>[['id'=>[1,2,3]]]])));
 	}
@@ -212,7 +216,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 
 		$this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run(null)));
 		$this->assertEquals(
-			"empty,requiredF,requiredA,numericA",
+			"requiredN,empty,requiredF,requiredA,numericA",
 			$this->map($v->run([
 				'name' => ''
 			]))
@@ -346,7 +350,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$v->optional('key')->notEmpty('err');
 		$this->assertEquals("", $this->map($v->run(['key' => 'aabbbcaaa'])));
 		$this->assertEquals("", $this->map($v->run(['key' => ' '])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 	}
 	public function testMail() {
 		$v = new \vakata\validation\Validator();
@@ -362,7 +366,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => '2'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '2,1'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'asdf'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 	}
 	public function testInt() {
 		$v = new \vakata\validation\Validator();
@@ -371,7 +375,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => '2'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '2,1'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'asdf'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 	}
 	public function testMin() {
 		$v = new \vakata\validation\Validator();
@@ -412,7 +416,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => 'asd'])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'асд'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'асдф'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'asdf'])));
 	}
@@ -423,7 +427,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => 'asd'])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'асд'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'асдф'])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'asdf'])));
 	}
@@ -444,7 +448,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => '1'])));
 		$this->assertEquals("", $this->map($v->run(['key' => '2'])));
 		$this->assertEquals("", $this->map($v->run(['key' => '3'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'asdf'])));
 	}
 	public function testDate() {
@@ -510,7 +514,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => json_encode('12.12.1970')])));
 		$this->assertEquals("", $this->map($v->run(['key' => json_encode(['a' => '01.01.2000'])])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '11.12.'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '11.11.2017'])));
 	}
 	public function testIp() {
@@ -521,7 +525,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => 'FE80:0000:0000:0000:0202:B3FF:FE1E:8329'])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'FE80::0202:B3FF:FE1E:8329'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '11.12.'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '11.11.2017'])));
 	}
 	public function testUrl() {
@@ -559,7 +563,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => '30351042633884'])));
 		$this->assertEquals("", $this->map($v->run(['key' => '6011000990139424'])));
 		$this->assertEquals("", $this->map($v->run(['key' => '3566002020360505'])));
-		$this->assertEquals("err", $this->map($v->run(['key' => ''])));
+		$this->assertEquals("", $this->map($v->run(['key' => ''])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'not a credit card number'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '1234 1234 1234 1234'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => '1234.1234.1234.1234'])));

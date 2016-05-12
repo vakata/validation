@@ -79,7 +79,7 @@ class Validator
     {
         $this->key = $key;
         $this->opt = false;
-        $this->callback(function ($value, $data) { return $value !== null; }, $message);
+        $this->callback(function ($value, $data) { return $value !== null && $value !== ''; }, $message);
         return $this;
     }
     /**
