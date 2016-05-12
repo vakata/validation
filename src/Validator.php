@@ -37,7 +37,7 @@ class Validator
             $temp = is_array($temp) && isset($temp[$keyPart]) ? $temp[$keyPart] : null;
         }
         if (strpos($key, '*') === false) {
-            if ($validator['optional'] && $temp === null) {
+            if ($validator['optional'] && ($temp === null || $temp === '')) {
                 return [];
             }
             if (!call_user_func($validator['callable'], $temp, $data)) {
