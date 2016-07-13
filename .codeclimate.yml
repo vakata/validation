@@ -25,6 +25,8 @@ engines:
         enabled: false
       CyclomaticComplexity:
         enabled: false
+      UnusedLocalVariable:
+        enabled: false
 ratings:
   paths:
   - "**.php"
