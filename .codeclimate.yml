@@ -19,6 +19,12 @@ engines:
         enabled: false
       Controversial/Superglobals:
         enabled: false
+      Design/WeightedMethodCount:
+        enabled: false
+      Design/TooManyPublicMethods:
+        enabled: false
+      CyclomaticComplexity:
+        enabled: false
 ratings:
   paths:
   - "**.php"
