@@ -28,7 +28,11 @@ class Validator
                 }
                 if (!$validator['optional'] || is_array($temp) && count($temp)) {
                     foreach ($temp as $k => $v) {
-                        $newKey = array_merge(array_slice($keyParts, 0, $index), [$k], array_slice($keyParts, $index + 1));
+                        $newKey = array_merge(
+                            array_slice($keyParts, 0, $index),
+                            [$k],
+                            array_slice($keyParts, $index + 1)
+                        );
                         $errors = array_merge($errors, $this->validate(implode('.', $newKey), $validator, $data));
                     }
                 }
@@ -79,7 +83,9 @@ class Validator
     {
         $this->key = $key;
         $this->opt = false;
-        $this->callback(function ($value, $data) { return $value !== null && $value !== ''; }, $message);
+        $this->callback(function ($value, $data) {
+            return $value !== null && $value !== '';
+        }, $message);
         return $this;
     }
     /**
@@ -376,7 +382,8 @@ class Validator
         }, $message);
     }
 
-    protected function parseDate($value, $format = null) {
+    protected function parseDate($value, $format = null)
+    {
         if ($value instanceof \DateTime) {
             $value = $value->getTimestamp();
         }
