@@ -57,7 +57,6 @@ class Validator
 
     /**
      * Run the validator on the passed data
-     * @method run
      * @param  array|string $data the data to validate
      * @return array              the errors encountered when validating or an empty array if successful
      */
@@ -74,7 +73,6 @@ class Validator
     }
     /**
      * Add a required key to validate.
-     * @method required
      * @param  string   $key     the key name
      * @param  string   $message optional message to error with if the key is not present when running the validator
      * @return self
@@ -90,7 +88,6 @@ class Validator
     }
     /**
      * Add an optional key to validate - the validations that follow will only run if the key is present.
-     * @method optional
      * @param  string   $key the key name to look for
      * @return self
      */
@@ -102,7 +99,6 @@ class Validator
     }
     /**
      * Add a validation rule in the form of a callable, it will receive the current key's value and the whole data.
-     * @method callback
      * @param  callable $handler the callable should return `true` if validation is OK and `false` otherwise
      * @param  string   $message optional message to include in the report if the validation fails
      * @return self
@@ -121,7 +117,6 @@ class Validator
     }
     /**
      * Add a validation using a regular expression
-     * @method regex
      * @param  string $regex   the regex to validate against
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
@@ -134,7 +129,6 @@ class Validator
     }
     /**
      * Add a numeric validation
-     * @method numeric
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
@@ -146,7 +140,6 @@ class Validator
     }
     /**
      * Add an allowed chars validation
-     * @method chars
      * @param  string  $chars string of allowed chars
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -160,7 +153,6 @@ class Validator
     }
     /**
      * Add a latin chars validation
-     * @method latin
      * @param  bool    $allowWhitespace should white space characters be allowed
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -174,7 +166,6 @@ class Validator
     }
     /**
      * Add an alphabetical chars validation
-     * @method alpha
      * @param  bool    $allowWhitespace should white space characters be allowed
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -188,7 +179,6 @@ class Validator
     }
     /**
      * Add an uppercase alphabetical chars validation
-     * @method upper
      * @param  bool    $allowWhitespace should white space characters be allowed
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -202,7 +192,6 @@ class Validator
     }
     /**
      * Add a lowercase alphabetical chars validation
-     * @method upper
      * @param  bool    $allowWhitespace should white space characters be allowed
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -216,7 +205,6 @@ class Validator
     }
     /**
      * Add a alphanumeric validation
-     * @method alpha
      * @param  bool    $allowWhitespace should white space characters be allowed
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
@@ -230,7 +218,6 @@ class Validator
     }
     /**
      * Add a not empty validation (fails on empty string)
-     * @method notEmpty
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
@@ -242,7 +229,6 @@ class Validator
     }
     /**
      * Add a mail validation
-     * @method mail
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -254,7 +240,6 @@ class Validator
     }
     /**
      * Add a float validation
-     * @method mail
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -266,7 +251,6 @@ class Validator
     }
     /**
      * Add an integer validation
-     * @method int
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -278,7 +262,6 @@ class Validator
     }
     /**
      * Add a min integer validation
-     * @method min
      * @param  mixed  $min    the minimum that the value should be equal to or greater than
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
@@ -291,7 +274,6 @@ class Validator
     }
     /**
      * Add a max integer validation
-     * @method max
      * @param  mixed   $max     the minimum that the value should be equal to or less than
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -304,7 +286,6 @@ class Validator
     }
     /**
      * Add a range integer validation
-     * @method between
      * @param  integer $min     the minimum that the value should be equal to or greater than
      * @param  integer $max     the maximum that the value should be equal to or less than
      * @param  string  $message an optional message to include in the report if the validation fails
@@ -318,7 +299,6 @@ class Validator
     }
     /**
      * Add an equals validation
-     * @method equals
      * @param  integer $target  the value that the input should be equal to
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -331,7 +311,6 @@ class Validator
     }
     /**
      * Add an exact length validation
-     * @method length
      * @param  integer $length  the desired input length
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -344,7 +323,6 @@ class Validator
     }
     /**
      * Add a minimum length validation
-     * @method minLength
      * @param  integer $length  the minimum desired input length
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -357,7 +335,6 @@ class Validator
     }
     /**
      * Add a maximum length validation
-     * @method maxLength
      * @param  integer $length  the maximum desired input length
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -370,7 +347,6 @@ class Validator
     }
     /**
      * Add an in array validation
-     * @method inArray
      * @param  array   $target  array of allowed values
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -406,7 +382,6 @@ class Validator
     }
     /**
      * Add a date validation
-     * @method date
      * @param  array   $format  the optional format to conform to (otherwise any strtotime compatible input is valid)
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
@@ -419,7 +394,6 @@ class Validator
     }
     /**
      * Add a min date validation
-     * @method minDate
      * @param  string|DateTime|int $min    the minimum that the value should be equal to or greater than
      * @param  string              $format the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
@@ -435,7 +409,6 @@ class Validator
     }
     /**
      * Add a max date validation
-     * @method minDate
      * @param  string|DateTime|int $max    the minimum that the value should be equal to or greater than
      * @param  string              $format the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
@@ -451,7 +424,6 @@ class Validator
     }
     /**
      * Add a range date validation
-     * @method between
      * @param  string|DateTime|int $min     the minimum that the value should be equal to or greater than
      * @param  string|DateTime|int $max     the minimum that the value should be equal to or less than
      * @param  string              $format the optional date format to conform to
@@ -469,7 +441,6 @@ class Validator
     }
     /**
      * Add an age validation (which could be relative to a given date)
-     * @method age
      * @param  int                 $age     the minimum age on a date
      * @param  string|DateTime|int $rel     the date to compare to (defaults to today)
      * @param  string              $format  the optional date format to conform to
@@ -486,7 +457,6 @@ class Validator
     }
     /**
      * Add a JSON validation
-     * @method between
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -498,7 +468,6 @@ class Validator
     }
     /**
      * Add an IP address validation
-     * @method mail
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -510,7 +479,6 @@ class Validator
     }
     /**
      * Add an URL validation
-     * @method url
      * @param  array|null $protocols array of allowed protocols (defaults to ['http','https'])
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
@@ -538,7 +506,6 @@ class Validator
     }
     /**
      * Add a mod10 validation
-     * @method mod10
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -551,7 +518,6 @@ class Validator
     }
     /**
      * Add a imei validation
-     * @method imei
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -564,7 +530,6 @@ class Validator
     }
     /**
      * Add credit card validation
-     * @method creditcard
      * @param  array|null $types   optional array of allowed cards (visa, mastercard, americanexpress, dinersclub, discover, jcb)
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
@@ -603,7 +568,6 @@ class Validator
     }
     /**
      * Add an IBAN validation
-     * @method iban
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -633,7 +597,6 @@ class Validator
     }
     /**
      * Add an UUID validation
-     * @method uuid
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -643,7 +606,6 @@ class Validator
     }
     /**
      * Add a MAC validation
-     * @method mac
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -695,7 +657,6 @@ class Validator
     }
     /**
      * Add a Bulgarian EGN validation
-     * @method bgEGN
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -707,7 +668,6 @@ class Validator
     }
     /**
      * Add a Bulgarian LNC validation
-     * @method bgEGN
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -719,7 +679,6 @@ class Validator
     }
     /**
      * Add a Bulgarian identification number validation (EGN or LNC)
-     * @method bgIDN
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -731,7 +690,6 @@ class Validator
     }
     /**
      * Add a Bulgarian male EGN validation
-     * @method bgMaleEGN
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -743,7 +701,6 @@ class Validator
     }
     /**
      * Add a Bulgarian female EGN validation
-     * @method bgFemaleEGN
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -755,7 +712,6 @@ class Validator
     }
     /**
      * Add a Bulgarian BULSTAT validation
-     * @method bgBulstat
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -798,7 +754,6 @@ class Validator
     }
     /**
      * Add a Bulgarian name validation
-     * @method bgName
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
