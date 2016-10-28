@@ -361,10 +361,13 @@ class Validator
     protected function parseDate($value, $format = null)
     {
         if ($value instanceof \DateTime) {
-            $value = $value->getTimestamp();
+            return $value->getTimestamp();
+        }
+        if (is_int($value)) {
+            return $value;
         }
         if ($format === null) {
-            return is_string($value) ? strtotime($value) : (is_int($value) ? $value : false);
+            return is_string($value) ? strtotime($value) : false;
         }
         $formats = [
             'c' => 'Y-m-d\TH:i:sP',
@@ -375,14 +378,14 @@ class Validator
         }
         $value = date_create_from_format($format, $value);
         $debug = date_get_last_errors();
-        if ($debug['warning_count'] !== 0 || $debug['error_count'] !== 0) {
-            $value = false;
+        if ($value === false || $debug['warning_count'] !== 0 || $debug['error_count'] !== 0) {
+            return false;
         }
-        return $value === false ? false : $value->getTimestamp();
+        return $value->getTimestamp();
     }
     /**
      * Add a date validation
-     * @param  array   $format  the optional format to conform to (otherwise any strtotime compatible input is valid)
+     * @param  string|null  $format  the optional format to conform to (otherwise any strtotime compatible input is valid)
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -394,7 +397,7 @@ class Validator
     }
     /**
      * Add a min date validation
-     * @param  string|DateTime|int $min    the minimum that the value should be equal to or greater than
+     * @param  string|\DateTime|int $min    the minimum that the value should be equal to or greater than
      * @param  string              $format the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
@@ -409,7 +412,7 @@ class Validator
     }
     /**
      * Add a max date validation
-     * @param  string|DateTime|int $max    the minimum that the value should be equal to or greater than
+     * @param  string|\DateTime|int $max    the minimum that the value should be equal to or greater than
      * @param  string              $format the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
@@ -424,8 +427,8 @@ class Validator
     }
     /**
      * Add a range date validation
-     * @param  string|DateTime|int $min     the minimum that the value should be equal to or greater than
-     * @param  string|DateTime|int $max     the minimum that the value should be equal to or less than
+     * @param  string|\DateTime|int $min     the minimum that the value should be equal to or greater than
+     * @param  string|\DateTime|int $max     the minimum that the value should be equal to or less than
      * @param  string              $format the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
@@ -442,7 +445,7 @@ class Validator
     /**
      * Add an age validation (which could be relative to a given date)
      * @param  int                 $age     the minimum age on a date
-     * @param  string|DateTime|int $rel     the date to compare to (defaults to today)
+     * @param  string|\DateTime|int $rel     the date to compare to (defaults to today)
      * @param  string              $format  the optional date format to conform to
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
@@ -630,7 +633,7 @@ class Validator
         } else {
             $year  += 1900;
         }
-        if (!checkdate($month, $day, $year)) {
+        if (!checkdate((int)$month, (int)$day, (int)$year)) {
             return false;
         }
 
