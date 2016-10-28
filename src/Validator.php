@@ -363,11 +363,8 @@ class Validator
         if ($value instanceof \DateTime) {
             return $value->getTimestamp();
         }
-        if (is_int($value)) {
-            return $value;
-        }
         if ($format === null) {
-            return is_string($value) ? strtotime($value) : false;
+            return is_string($value) ? strtotime($value) : (is_int($value) ? $value : false);
         }
         $formats = [
             'c' => 'Y-m-d\TH:i:sP',
@@ -376,7 +373,7 @@ class Validator
         if (isset($formats[$format])) {
             $format = $formats[$format];
         }
-        $value = date_create_from_format($format, $value);
+        $value = date_create_from_format($format, (string)$value);
         $debug = date_get_last_errors();
         if ($value === false || $debug['warning_count'] !== 0 || $debug['error_count'] !== 0) {
             return false;
