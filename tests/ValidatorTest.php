@@ -25,7 +25,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 	public function testOneKey() {
 		$v = new \vakata\validation\Validator();
 		$v->numeric("numeric");
-		$this->assertEquals([['key'=>'','message'=>'numeric','value'=>'not-numeric']], $v->run("not-numeric"));
+		$this->assertEquals([['key'=>'','message'=>'numeric','value'=>'not-numeric','rule'=>'numeric','data'=>[]]], $v->run("not-numeric"));
 		$this->assertEquals([], $v->run("1"));
 	}
 	public function testRequired() {
@@ -694,5 +694,28 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("", $this->map($v->run(['key' => 'Мария-Венцислава Георгиева Петрова-Карабашибозукова'])));
 		$this->assertEquals("", $this->map($v->run(['key' => 'Мария Иванова Петрова Гошева'])));
 		$this->assertEquals("err", $this->map($v->run(['key' => 'Мария'])));
+	}
+	public function testSerialize()
+	{
+		$v = new \vakata\validation\Validator();
+		$v
+			->required('name', 'requiredN')
+			->required('family', 'requiredF')->alpha(null, "alphaF")
+			->optional("children.*.name")->alpha("asfd", "alphaC");
+		$this->assertEquals(
+			[
+				'name' => [
+					[ 'rule' => 'required', 'message' => 'requiredN', 'data' => [] ]
+				],
+				'family' => [
+					[ 'rule' => 'required', 'message' => 'requiredF', 'data' => [] ],
+					[ 'rule' => 'alpha', 'message' => 'alphaF', 'data' => [ null ] ],
+				],
+				'children.*.name' => [
+					[ 'rule' => 'alpha', 'message' => 'alphaC', 'data' => [ "asfd" ] ],
+				]
+			],
+			json_decode(json_encode($v), true)
+		);
 	}
 }

@@ -2,10 +2,12 @@
 
 namespace vakata\validation;
 
+use JSONSerializable;
+
 /**
  * A validation class, supporting arrays and nested arrays of data.
  */
-class Validator
+class Validator implements JSONSerializable
 {
     protected $key = '';
     protected $opt = false;
@@ -48,6 +50,8 @@ class Validator
                 $errors[] = [
                     'key' => $key,
                     'message' => $validator['message'],
+                    'rule' => $validator['rule'],
+                    'data' => $validator['data'],
                     'value' => $temp
                 ];
             }
@@ -83,7 +87,7 @@ class Validator
         $this->opt = false;
         $this->callback(function ($value, $data) {
             return $value !== null && $value !== '';
-        }, $message);
+        }, $message, 'required');
         return $this;
     }
     /**
@@ -101,9 +105,11 @@ class Validator
      * Add a validation rule in the form of a callable, it will receive the current key's value and the whole data.
      * @param  callable $handler the callable should return `true` if validation is OK and `false` otherwise
      * @param  string   $message optional message to include in the report if the validation fails
+     * @param  string   $rule    optional the rule name (defaults to callback)
+     * @param  array    $data    optional the rule params (defaults to an empy array)
      * @return self
      */
-    public function callback(callable $handler, $message = '')
+    public function callback(callable $handler, $message = '', $rule = 'callback', array $data = [])
     {
         if (!isset($this->validations[$this->key])) {
             $this->validations[$this->key] = [];
@@ -111,7 +117,9 @@ class Validator
         $this->validations[$this->key][] = [
             'callable' => $handler,
             'message'  => $message,
-            'optional' => $this->opt
+            'optional' => $this->opt,
+            'rule'     => $rule,
+            'data'     => $data
         ];
         return $this;
     }
@@ -121,11 +129,12 @@ class Validator
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function regex($regex, $message = '')
+    public function regex($regex, $message = '', $name = 'regex', array $data = [])
     {
+        if ($name === 'regex') { $data = [$regex]; }
         return $this->callback(function ($value, $data) use ($regex) {
             return preg_match($regex, $value);
-        }, $message);
+        }, $message, $name, $data);
     }
     /**
      * Add a numeric validation
@@ -136,7 +145,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return is_numeric($value);
-        }, $message);
+        }, $message, 'numeric');
     }
     /**
      * Add an allowed chars validation
@@ -149,7 +158,7 @@ class Validator
         if ($chars === null) {
             $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         }
-        return $this->regex('(^['.preg_quote($chars).']*$)', $message);
+        return $this->regex('(^['.preg_quote($chars).']*$)', $message, 'chars', [$chars]);
     }
     /**
      * Add a latin chars validation
@@ -161,7 +170,9 @@ class Validator
     {
         return $this->regex(
             $allowWhitespace ? '(^[a-z\s]*$)i' : '(^[a-z]*$)i',
-            $message
+            $message,
+            'latin',
+            [$allowWhitespace]
         );
     }
     /**
@@ -174,7 +185,9 @@ class Validator
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{L}\s]*$)ui' : '(^[\p{L}]*$)ui',
-            $message
+            $message,
+            'alpha',
+            [$allowWhitespace]
         );
     }
     /**
@@ -187,7 +200,9 @@ class Validator
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{Lu}\s]*$)ui' : '(^[\p{Lu}]*$)ui',
-            $message
+            $message,
+            'upper',
+            [$allowWhitespace]
         );
     }
     /**
@@ -200,7 +215,9 @@ class Validator
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{Ll}\s]*$)ui' : '(^[\p{Ll}]*$)ui',
-            $message
+            $message,
+            'lower',
+            [$allowWhitespace]
         );
     }
     /**
@@ -213,7 +230,9 @@ class Validator
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{L}0-9\s]*$)ui' : '(^[\p{L}0-9]*$)ui',
-            $message
+            $message,
+            'alphanumeric',
+            [$allowWhitespace]
         );
     }
     /**
@@ -225,7 +244,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return is_string($value) ? strlen($value) > 0 : !!$value;
-        }, $message);
+        }, $message, 'notEmpty');
     }
     /**
      * Add a mail validation
@@ -236,7 +255,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
-        }, $message);
+        }, $message, 'mail');
     }
     /**
      * Add a float validation
@@ -247,7 +266,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_FLOAT) !== false;
-        }, $message);
+        }, $message, 'float');
     }
     /**
      * Add an integer validation
@@ -258,7 +277,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_INT) !== false;
-        }, $message);
+        }, $message, 'int');
     }
     /**
      * Add a min integer validation
@@ -270,7 +289,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($min) {
             return $value >= $min;
-        }, $message);
+        }, $message, 'min', [$min]);
     }
     /**
      * Add a max integer validation
@@ -282,7 +301,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($max) {
             return $value <= $max;
-        }, $message);
+        }, $message, 'max', [$max]);
     }
     /**
      * Add a range integer validation
@@ -295,7 +314,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($min, $max) {
             return $value >= $min && $value <= $max;
-        }, $message);
+        }, $message, 'between', [$min, $max]);
     }
     /**
      * Add an equals validation
@@ -307,7 +326,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($target) {
             return $value == $target;
-        }, $message);
+        }, $message, 'equals', [$target]);
     }
     /**
      * Add an exact length validation
@@ -319,7 +338,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') == $length;
-        }, $message);
+        }, $message, 'length', [$length]);
     }
     /**
      * Add a minimum length validation
@@ -331,7 +350,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') >= $length;
-        }, $message);
+        }, $message, 'minLength', [$length]);
     }
     /**
      * Add a maximum length validation
@@ -343,7 +362,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') <= $length;
-        }, $message);
+        }, $message, 'maxLength', [$length]);
     }
     /**
      * Add an in array validation
@@ -355,7 +374,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($target) {
             return in_array($value, $target);
-        }, $message);
+        }, $message, 'inArray', [$target]);
     }
 
     protected function parseDate($value, $format = null)
@@ -390,7 +409,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) use ($format) {
             return $this->parseDate($value, $format) !== false;
-        }, $message);
+        }, $message, 'date', [$format]);
     }
     /**
      * Add a min date validation
@@ -405,7 +424,7 @@ class Validator
         return $this->callback(function ($value, $data) use ($min, $format) {
             $value = $this->parseDate($value, $format);
             return $min !== false && $value !== false && $value >= $min;
-        }, $message);
+        }, $message, 'minDate', [$min, $format]);
     }
     /**
      * Add a max date validation
@@ -420,7 +439,7 @@ class Validator
         return $this->callback(function ($value, $data) use ($max, $format) {
             $value = $this->parseDate($value, $format);
             return $max !== false && $value !== false && $value <= $max;
-        }, $message);
+        }, $message, 'maxDate', [$max, $format]);
     }
     /**
      * Add a range date validation
@@ -437,7 +456,7 @@ class Validator
         return $this->callback(function ($value, $data) use ($min, $max, $format) {
             $value = $this->parseDate($value, $format);
             return $min !== false && $max !== false && $value !== false && $value >= $min && $value <= $max;
-        }, $message);
+        }, $message, 'betweenDate', [$min, $max, $format]);
     }
     /**
      * Add an age validation (which could be relative to a given date)
@@ -453,7 +472,7 @@ class Validator
         return $this->callback(function ($value, $data) use ($age, $rel, $format) {
             $value = $this->parseDate($value, $format);
             return $value !== false && $rel !== false && strtotime('+' . (int)$age . ' years', $value) <= $rel;
-        }, $message);
+        }, $message, 'age', [$age, $rel, $format]);
     }
     /**
      * Add a JSON validation
@@ -464,7 +483,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return json_decode($value, true) !== null;
-        }, $message);
+        }, $message, 'json');
     }
     /**
      * Add an IP address validation
@@ -475,7 +494,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_IP) !== false;
-        }, $message);
+        }, $message, 'ip');
     }
     /**
      * Add an URL validation
@@ -491,7 +510,7 @@ class Validator
         return $this->callback(function ($value, $data) use ($protocols) {
             return filter_var($value, FILTER_VALIDATE_URL) !== false &&
                    in_array(parse_url($value, PHP_URL_SCHEME), $protocols);
-        }, $message);
+        }, $message, 'url', [$protocols]);
     }
     protected function luhn($value)
     {
@@ -514,7 +533,7 @@ class Validator
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
             return $this->luhn($value);
-        }, $message);
+        }, $message, 'mod10');
     }
     /**
      * Add a imei validation
@@ -526,7 +545,7 @@ class Validator
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
             return $this->luhn($value);
-        }, $message);
+        }, $message, 'imei');
     }
     /**
      * Add credit card validation
@@ -564,7 +583,7 @@ class Validator
                 }
             }
             return false;
-        }, $message);
+        }, $message, 'creditcard', [$types]);
     }
     /**
      * Add an IBAN validation
@@ -593,7 +612,7 @@ class Validator
             } while (strlen($iban));
             
             return $mod === 1;
-        }, $message);
+        }, $message, 'iban');
     }
     /**
      * Add an UUID validation
@@ -602,7 +621,7 @@ class Validator
      */
     public function uuid($message = '')
     {
-        return $this->regex('(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i', $message);
+        return $this->regex('(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i', $message, 'uuid');
     }
     /**
      * Add a MAC validation
@@ -611,7 +630,7 @@ class Validator
      */
     public function mac($message = '')
     {
-        return $this->regex('(^(([0-9a-fA-F]{2}-){5}|([0-9a-fA-F]{2}:){5})[0-9a-fA-F]{2}$)', $message);
+        return $this->regex('(^(([0-9a-fA-F]{2}-){5}|([0-9a-fA-F]{2}:){5})[0-9a-fA-F]{2}$)', $message, 'mac');
     }
     protected function egn($value)
     {
@@ -664,7 +683,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value);
-        }, $message);
+        }, $message, 'bgEGN');
     }
     /**
      * Add a Bulgarian LNC validation
@@ -675,7 +694,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return $this->lnc($value);
-        }, $message);
+        }, $message, 'bgLNC');
     }
     /**
      * Add a Bulgarian identification number validation (EGN or LNC)
@@ -686,7 +705,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) || $this->lnc($value);
-        }, $message);
+        }, $message, 'bgIDN');
     }
     /**
      * Add a Bulgarian male EGN validation
@@ -697,7 +716,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 0;
-        }, $message);
+        }, $message, 'bgMaleEGN');
     }
     /**
      * Add a Bulgarian female EGN validation
@@ -708,7 +727,7 @@ class Validator
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 1;
-        }, $message);
+        }, $message, 'bgFemaleEGN');
     }
     /**
      * Add a Bulgarian BULSTAT validation
@@ -750,7 +769,7 @@ class Validator
                 }
             }
             return true;
-        }, $message);
+        }, $message, 'bgBulstat');
     }
     /**
      * Add a Bulgarian name validation
@@ -759,6 +778,15 @@ class Validator
      */
     public function bgName($message = '')
     {
-        return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message);
+        return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message, 'bgName');
+    }
+
+    public function jsonSerialize()
+    {
+        return array_map(function ($v) {
+            return array_map(function ($vv) {
+                return [ 'rule' => $vv['rule'], 'data' => $vv['data'], 'message' => $vv['message'] ];
+            }, $v);
+        }, $this->validations);
     }
 }
