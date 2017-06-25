@@ -718,4 +718,20 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 			json_decode(json_encode($v), true)
 		);
 	}
+	public function testRemove() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->numeric('err');
+		$this->assertEquals("", $this->map($v->run(['key' => '12'])));
+		$v->remove('key');
+		$this->assertEquals("", $this->map($v->run(['key' => '1a'])));
+	}
+	public function testRemoveRule() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->numeric('err')->alpha(true, 'alp');
+		$this->assertEquals("err,alp", $this->map($v->run(['key' => '1a'])));
+		$v->remove('key', 'alpha');
+		$this->assertEquals("err", $this->map($v->run(['key' => '1a'])));
+		$v->remove('key', 'numeric');
+		$this->assertEquals("", $this->map($v->run(['key' => '1a'])));
+	}
 }

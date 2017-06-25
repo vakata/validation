@@ -75,6 +75,21 @@ class Validator implements JSONSerializable
         }
         return $errors;
     }
+    public function remove($key, $rule = null)
+    {
+        if (isset($this->validations[$key])) {
+            if ($rule === null) {
+                unset($this->validations[$key]);
+            } else {
+                foreach ($this->validations[$key] as $k => $validation) {
+                    if ($validation['rule'] === $rule) {
+                        unset($this->validations[$key][$k]);
+                    }
+                }
+            }
+        }
+        return $this;
+    }
     /**
      * Add a required key to validate.
      * @param  string   $key     the key name
