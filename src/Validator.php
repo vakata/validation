@@ -795,6 +795,42 @@ class Validator implements JSONSerializable
     {
         return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message, 'bgName');
     }
+    /**
+     * Add a min validation related to another field in the validator (the current field should be greater or equal)
+     * @param  mixed  $min    the name of the related field to use for the minimum value
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function minRelation($min, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($min) {
+            return isset($data[$min]) && $value >= $data[$min];
+        }, $message, 'minRelation', [$min, $data[$min] ?? null]);
+    }
+    /**
+     * Add a max validation related to another field in the validator (the current field should be greater or equal)
+     * @param  mixed  $max     the name of the related field to use for the minimum value
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function maxRelation($max, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($max) {
+            return isset($data[$max]) && $value <= $data[$max];
+        }, $message, 'maxRelation', [$max, $data[$max] ?? null]);
+    }
+    /**
+     * Add an equals validation related to another field
+     * @param  integer $target  the field whose value the current field should match
+     * @param  string  $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function equalsRelation($target, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($target) {
+            return isset($data[$target]) && $value == $data[$target];
+        }, $message, 'equalsRelation', [$target, $data[$target] ?? null]);
+    }
 
     public function jsonSerialize()
     {

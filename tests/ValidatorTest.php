@@ -734,4 +734,27 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$v->remove('key', 'numeric');
 		$this->assertEquals("", $this->map($v->run(['key' => '1a'])));
 	}
+	public function testMinRelation() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->minRelation('rel', 'err');
+		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
+		$this->assertEquals("err", $this->map($v->run(['key' => '0', 'rel' => '1'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '2', 'rel' => '2'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '3', 'rel' => '2'])));
+	}
+	public function testMaxRelation() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->maxRelation('rel', 'err');
+		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
+		$this->assertEquals("err", $this->map($v->run(['key' => '2', 'rel' => '1'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '2', 'rel' => '2'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '1', 'rel' => '2'])));
+	}
+	public function testEqualsRelation() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->equalsRelation('rel', 'err');
+		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
+		$this->assertEquals("err", $this->map($v->run(['key' => '2', 'rel' => '1'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '2', 'rel' => '2'])));
+	}
 }
