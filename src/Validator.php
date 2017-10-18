@@ -820,6 +820,37 @@ class Validator implements JSONSerializable
         }, $message, 'maxRelation', [$max, $data[$max] ?? null]);
     }
     /**
+     * Add a min validation related to another field in the validator (the current field should be greater or equal)
+     * @param  mixed  $min    the name of the related field to use for the minimum value
+     * @param  mixed  $format optional date format
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function minDateRelation($min, $format = null, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($min, $format) {
+            if (!isset($data[$min])) {
+                return false;
+            }
+            return $this->parseDate($value, $format) >= $this->parseDate($data[$min], $format);
+        }, $message, 'minDateRelation', [$min, $data[$min] ?? null, $format]);
+    }
+    /**
+     * Add a max validation related to another field in the validator (the current field should be greater or equal)
+     * @param  mixed  $max     the name of the related field to use for the minimum value
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function maxDateRelation($max, $format = null, $message = '')
+    {
+        return $this->callback(function ($value, $data) use ($max, $format) {
+            if (!isset($data[$max])) {
+                return false;
+            }
+            return $this->parseDate($value, $format) <= $this->parseDate($data[$max], $format);
+        }, $message, 'maxDateRelation', [$max, $data[$max] ?? null, $format]);
+    }
+    /**
      * Add an equals validation related to another field
      * @param  integer $target  the field whose value the current field should match
      * @param  string  $message an optional message to include in the report if the validation fails

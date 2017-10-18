@@ -757,4 +757,18 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 		$this->assertEquals("err", $this->map($v->run(['key' => '2', 'rel' => '1'])));
 		$this->assertEquals("", $this->map($v->run(['key' => '2', 'rel' => '2'])));
 	}
+	public function testMinDateRelation() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->minDateRelation('rel', null, 'err');
+		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
+		$this->assertEquals("err", $this->map($v->run(['key' => '01.01.2017', 'rel' => '02.01.2017'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '03.01.2017', 'rel' => '02.01.2017'])));
+	}
+	public function testMaxDateRelation() {
+		$v = new \vakata\validation\Validator();
+		$v->optional('key')->maxDateRelation('rel', null, 'err');
+		$this->assertEquals("err", $this->map($v->run(['key' => '2'])));
+		$this->assertEquals("err", $this->map($v->run(['key' => '03.01.2017', 'rel' => '02.01.2017'])));
+		$this->assertEquals("", $this->map($v->run(['key' => '01.01.2017', 'rel' => '02.01.2017'])));
+	}
 }
