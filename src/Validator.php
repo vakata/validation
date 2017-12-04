@@ -20,7 +20,7 @@ class Validator implements JSONSerializable
         $temp = $data;
         foreach ($keyParts as $index => $keyPart) {
             if ($keyPart === '*') {
-                if (!$validator['optional']) {
+                if (!$validator->isOptional()) {
                     if (!is_array($temp)) {
                         $temp = [];
                     }
@@ -28,7 +28,7 @@ class Validator implements JSONSerializable
                         $temp[] = null;
                     }
                 }
-                if (!$validator['optional'] || is_array($temp) && count($temp)) {
+                if (!$validator->isOptional() || is_array($temp) && count($temp)) {
                     foreach ($temp as $k => $v) {
                         $newKey = array_merge(
                             array_slice($keyParts, 0, $index),
@@ -43,15 +43,15 @@ class Validator implements JSONSerializable
             $temp = is_array($temp) && isset($temp[$keyPart]) ? $temp[$keyPart] : null;
         }
         if (strpos($key, '*') === false) {
-            if ($validator['optional'] && ($temp === null || $temp === '')) {
+            if ($validator->isOptional() && ($temp === null || $temp === '')) {
                 return [];
             }
-            if (!call_user_func($validator['callable'], $temp, $data)) {
+            if (!$validator->execute($temp, $data)) {
                 $errors[] = [
                     'key' => $key,
-                    'message' => $validator['message'],
-                    'rule' => $validator['rule'],
-                    'data' => $validator['data'],
+                    'message' => $validator->getMessage(),
+                    'rule' => $validator->getRule(),
+                    'data' => $validator->getData(),
                     'value' => $temp
                 ];
             }
@@ -75,6 +75,17 @@ class Validator implements JSONSerializable
         }
         return $errors;
     }
+    public function rules(string $key = null): array
+    {
+        if ($key !== null) {
+            return $this->validations[$key] ?? [];
+        }
+        $rules = [];
+        foreach ($this->validations as $k => $v) {
+            $rules = array_merge($rules, $v);
+        }
+        return $rules;
+    }
     public function remove($key, $rule = null)
     {
         if (isset($this->validations[$key])) {
@@ -82,7 +93,7 @@ class Validator implements JSONSerializable
                 unset($this->validations[$key]);
             } else {
                 foreach ($this->validations[$key] as $k => $validation) {
-                    if ($validation['rule'] === $rule) {
+                    if ($validation->getRule() === $rule) {
                         unset($this->validations[$key][$k]);
                     }
                 }
@@ -129,13 +140,7 @@ class Validator implements JSONSerializable
         if (!isset($this->validations[$this->key])) {
             $this->validations[$this->key] = [];
         }
-        $this->validations[$this->key][] = [
-            'callable' => $handler,
-            'message'  => $message,
-            'optional' => $this->opt,
-            'rule'     => $rule,
-            'data'     => $data
-        ];
+        $this->validations[$this->key][] = new Rule($this->key, $handler, $message, $rule, $data, $this->opt);
         return $this;
     }
     /**
@@ -867,7 +872,7 @@ class Validator implements JSONSerializable
     {
         return array_map(function ($v) {
             return array_map(function ($vv) {
-                return [ 'rule' => $vv['rule'], 'data' => $vv['data'], 'message' => $vv['message'] ];
+                return [ 'rule' => $vv->getRule(), 'data' => $vv->getData(), 'message' => $vv->getMessage() ];
             }, $v);
         }, $this->validations);
     }

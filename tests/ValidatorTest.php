@@ -212,7 +212,7 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
 			->required('age', 'requiredA')->numeric("numericA")
 			->optional("newsletter")->numeric("numericN")
 			->optional("children.*.name")->alpha(null, "alphaC")
-			->optional("children.*.age")->numeric(null, "numericC");
+			->optional("children.*.age")->numeric("numericC");
 
 		$this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run(null)));
 		$this->assertEquals(
