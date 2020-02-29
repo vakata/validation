@@ -14,6 +14,8 @@ class Rule
     protected $data;
     protected $optional;
     protected $enabled;
+    protected $condition;
+    protected $when;
 
     public function __construct(
         string $key,
@@ -21,7 +23,9 @@ class Rule
         string $message = '',
         string $rule = 'callback',
         array $data = [],
-        bool $optional = true
+        bool $optional = true,
+        callable $condition = null,
+        Validator $validator = null
     ) {
         $this->key = $key;
         $this->handler = $handler;
@@ -30,6 +34,8 @@ class Rule
         $this->data = $data;
         $this->optional = $optional;
         $this->enabled = true;
+        $this->condition = $condition;
+        $this->validator = $validator;
     }
     public function getKey(): string
     {
@@ -95,8 +101,40 @@ class Rule
         return $this;
     }
 
-    public function execute($value, $data)
+    public function hasCondition()
     {
-        return call_user_func($this->handler, $value, $data);
+        return $this->condition !== null;
+    }
+    public function setCondition(callable $condition = null)
+    {
+        $this->condition !== $condition;
+        return $this;
+    }
+
+    public function hasValidator()
+    {
+        return $this->validator !== null;
+    }
+    public function getValidator()
+    {
+        return $this->validator;
+    }
+    public function setValidator(Validator $validator)
+    {
+        $this->validator = $validator;
+        return $this;
+    }
+
+    public function execute($value, $data, $context = null)
+    {
+        if ($this->hasCondition() && !call_user_func($this->condition, $value, $data, $context)) {
+            return true;
+        }
+        if ($this->hasValidator() && count($this->getValidator()->run($data, $context))) {
+            return true;
+        }
+        return !$this->hasCondition() || call_user_func($this->condition, $value, $data, $context) ?
+            call_user_func($this->handler, $value, $data, $context) :
+            true;
     }
 }

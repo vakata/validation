@@ -11,9 +11,11 @@ class Validator implements JSONSerializable
 {
     protected $key = '';
     protected $opt = false;
+    protected $cond = null;
+    protected $when = null;
     protected $validations = [];
 
-    protected function validate($key, $validator, $data)
+    protected function validate($key, $validator, $data, $context)
     {
         $errors = [];
         $keyParts = explode('.', $key);
@@ -35,7 +37,15 @@ class Validator implements JSONSerializable
                             [$k],
                             array_slice($keyParts, $index + 1)
                         );
-                        $errors = array_merge($errors, $this->validate(implode('.', $newKey), $validator, $data));
+                        $errors = array_merge(
+                            $errors,
+                            $this->validate(
+                                implode('.', $newKey),
+                                $validator,
+                                $data,
+                                $context
+                            )
+                        );
                     }
                 }
                 break;
@@ -46,7 +56,7 @@ class Validator implements JSONSerializable
             if ($validator->isOptional() && ($temp === null || $temp === '')) {
                 return [];
             }
-            if (!$validator->execute($temp, $data)) {
+            if (!$validator->execute($temp, $data, $context)) {
                 $errors[] = [
                     'key' => $key,
                     'message' => $validator->getMessage(),
@@ -62,15 +72,16 @@ class Validator implements JSONSerializable
     /**
      * Run the validator on the passed data
      * @param  array|string $data the data to validate
+     * @param  mixed $context optional context
      * @return array              the errors encountered when validating or an empty array if successful
      */
-    public function run($data)
+    public function run($data, $context = null)
     {
         $data = is_array($data) ? $data : [ '' => $data ];
         $errors = [];
         foreach ($this->validations as $key => $validators) {
             foreach ($validators as $validator) {
-                $errors = array_merge($errors, $this->validate($key, $validator, $data));
+                $errors = array_merge($errors, $this->validate($key, $validator, $data, $context));
             }
         }
         return $errors;
@@ -101,6 +112,13 @@ class Validator implements JSONSerializable
         }
         return $this;
     }
+
+    public function condition($cond = null)
+    {
+        $this->cond = $cond;
+        return $this;
+    }
+
     /**
      * Add a required key to validate.
      * @param  string   $key     the key name
@@ -129,10 +147,10 @@ class Validator implements JSONSerializable
     }
     /**
      * Add a validation rule in the form of a callable, it will receive the current key's value and the whole data.
-     * @param  callable $handler the callable should return `true` if validation is OK and `false` otherwise
-     * @param  string   $message optional message to include in the report if the validation fails
-     * @param  string   $rule    optional the rule name (defaults to callback)
-     * @param  array    $data    optional the rule params (defaults to an empy array)
+     * @param  callable $handler   the callable should return `true` if validation is OK and `false` otherwise
+     * @param  string   $message   optional message to include in the report if the validation fails
+     * @param  string   $rule      optional the rule name (defaults to callback)
+     * @param  array    $data      optional the rule params (defaults to an empy array)
      * @return self
      */
     public function callback(callable $handler, $message = '', $rule = 'callback', array $data = [])
@@ -140,7 +158,16 @@ class Validator implements JSONSerializable
         if (!isset($this->validations[$this->key])) {
             $this->validations[$this->key] = [];
         }
-        $this->validations[$this->key][] = new Rule($this->key, $handler, $message, $rule, $data, $this->opt);
+        $this->validations[$this->key][] = new Rule(
+            $this->key,
+            $handler,
+            $message,
+            $rule,
+            $data,
+            $this->opt,
+            is_callable($this->cond) ? $this->cond : null,
+            ($this->cond instanceof Validator) ? $this->cond : null
+        );
         return $this;
     }
     /**
@@ -151,7 +178,9 @@ class Validator implements JSONSerializable
      */
     public function regex($regex, $message = '', $name = 'regex', array $data = [])
     {
-        if ($name === 'regex') { $data = [$regex]; }
+        if ($name === 'regex') {
+            $data = [$regex];
+        }
         return $this->callback(function ($value, $data) use ($regex) {
             return preg_match($regex, $value);
         }, $message, $name, $data);
@@ -421,8 +450,8 @@ class Validator implements JSONSerializable
     }
     /**
      * Add a date validation
-     * @param  string|null  $format  the optional format to conform to (otherwise any strtotime compatible input is valid)
-     * @param  string  $message an optional message to include in the report if the validation fails
+     * @param string|null $format the optional format to conform to (otherwise any strtotime compatible input is valid)
+     * @param string  $message an optional message to include in the report if the validation fails
      * @return self
      */
     public function date($format = null, $message = '')
@@ -569,7 +598,8 @@ class Validator implements JSONSerializable
     }
     /**
      * Add credit card validation
-     * @param  array|null $types   optional array of allowed cards (visa, mastercard, americanexpress, dinersclub, discover, jcb)
+     * @param  array|null $types   optional array of allowed cards
+     *                             (visa,mastercard,americanexpress,dinersclub,discover,jcb)
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -641,7 +671,11 @@ class Validator implements JSONSerializable
      */
     public function uuid($message = '')
     {
-        return $this->regex('(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i', $message, 'uuid');
+        return $this->regex(
+            '(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i',
+            $message,
+            'uuid'
+        );
     }
     /**
      * Add a MAC validation
@@ -810,7 +844,7 @@ class Validator implements JSONSerializable
     {
         return $this->callback(function ($value, $data) use ($min) {
             return isset($data[$min]) && $value >= $data[$min];
-        }, $message, 'minRelation', [$min, $data[$min] ?? null]);
+        }, $message, 'minRelation', [$min, null]);
     }
     /**
      * Add a max validation related to another field in the validator (the current field should be greater or equal)
@@ -822,7 +856,7 @@ class Validator implements JSONSerializable
     {
         return $this->callback(function ($value, $data) use ($max) {
             return isset($data[$max]) && $value <= $data[$max];
-        }, $message, 'maxRelation', [$max, $data[$max] ?? null]);
+        }, $message, 'maxRelation', [$max, null]);
     }
     /**
      * Add a min validation related to another field in the validator (the current field should be greater or equal)
@@ -838,7 +872,7 @@ class Validator implements JSONSerializable
                 return false;
             }
             return $this->parseDate($value, $format) >= $this->parseDate($data[$min], $format);
-        }, $message, 'minDateRelation', [$min, $data[$min] ?? null, $format]);
+        }, $message, 'minDateRelation', [$min, null, $format]);
     }
     /**
      * Add a max validation related to another field in the validator (the current field should be greater or equal)
@@ -853,7 +887,7 @@ class Validator implements JSONSerializable
                 return false;
             }
             return $this->parseDate($value, $format) <= $this->parseDate($data[$max], $format);
-        }, $message, 'maxDateRelation', [$max, $data[$max] ?? null, $format]);
+        }, $message, 'maxDateRelation', [$max, null, $format]);
     }
     /**
      * Add an equals validation related to another field
@@ -865,14 +899,19 @@ class Validator implements JSONSerializable
     {
         return $this->callback(function ($value, $data) use ($target) {
             return isset($data[$target]) && $value == $data[$target];
-        }, $message, 'equalsRelation', [$target, $data[$target] ?? null]);
+        }, $message, 'equalsRelation', [$target, null]);
     }
 
     public function jsonSerialize()
     {
         return array_map(function ($v) {
             return array_map(function ($vv) {
-                return [ 'rule' => $vv->getRule(), 'data' => $vv->getData(), 'message' => $vv->getMessage() ];
+                return [
+                    'rule' => $vv->getRule(),
+                    'data' => $vv->getData(),
+                    'message' => $vv->getMessage(),
+                    'when' => $vv->getValidator()
+                ];
             }, $v);
         }, $this->validations);
     }
