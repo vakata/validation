@@ -41,6 +41,11 @@ class Rule
     {
         return $this->key;
     }
+    public function setKey(string $key): Rule
+    {
+        $this->key = $key;
+        return $this;
+    }
     public function getMessage(): string
     {
         return $this->message;
@@ -125,13 +130,25 @@ class Rule
         return $this;
     }
 
-    public function execute($value, $data, $context = null)
+    public function execute($key, $value, $data, $context = null)
     {
         if ($this->hasCondition() && !call_user_func($this->condition, $value, $data, $context)) {
             return true;
         }
-        if ($this->hasValidator() && count($this->getValidator()->run($data, $context))) {
-            return true;
+        if ($this->hasValidator()) {
+            $v = new Validator();
+            foreach ($this->getValidator()->rules() as $r) {
+                $rule = (clone $r);
+                if ($rule->getKey()[0] === '.') {
+                    $parts = explode('.', $key);
+                    $parts[count($parts) - 1] = substr($rule->getKey(), 1);
+                    $rule->setKey(implode('.', $parts));
+                }
+                $v->addRule($rule->getKey(), $rule);
+            }
+            if (count($v->run($data, $context))) {
+                return true;
+            }
         }
         return !$this->hasCondition() || call_user_func($this->condition, $value, $data, $context) ?
             call_user_func($this->handler, $value, $data, $context) :

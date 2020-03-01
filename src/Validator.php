@@ -15,6 +15,23 @@ class Validator implements JSONSerializable
     protected $when = null;
     protected $validations = [];
 
+    public function __clone()
+    {
+        foreach ($this->validations as $k => $rules) {
+            foreach ($rules as $kk => $rule) {
+                $this->validations[$k][$kk] = (clone $rule);
+            }
+        }
+    }
+    public function addRule(string $key, Rule $rule)
+    {
+        if (!isset($this->validations[$key])) {
+            $this->validations[$key] = [];
+        }
+        $this->validations[$key][] = $rule;
+        return $this;
+    }
+
     protected function validate($key, $validator, $data, $context)
     {
         $errors = [];
@@ -56,7 +73,7 @@ class Validator implements JSONSerializable
             if ($validator->isOptional() && ($temp === null || $temp === '')) {
                 return [];
             }
-            if (!$validator->execute($temp, $data, $context)) {
+            if (!$validator->execute($key, $temp, $data, $context)) {
                 $errors[] = [
                     'key' => $key,
                     'message' => $validator->getMessage(),
