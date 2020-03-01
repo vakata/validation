@@ -811,4 +811,81 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("req2", $this->map($v->run(['key2'=>'2'])));
         $this->assertEquals("req1,req2", $this->map($v->run(['key1'=>'1','key2'=>'2'])));
     }
+    public function testAdd() {
+        $v = new \vakata\validation\Validator();
+        $v
+            ->add('name', 'required', 'requiredN')
+            ->add('name', 'alpha', null, "alphaN")
+            ->add('name', 'notEmpty', "empty")
+            ->add('family', 'required', 'requiredF')
+            ->add('family', 'alpha', null, "alphaF")
+            ->add('age', 'required', 'requiredA')
+            ->add('age', 'numeric', "numericA")
+            ->addOptional("newsletter", 'numeric', "numericN")
+            ->addOptional("children.*.name", 'alpha', null, "alphaC")
+            ->addOptional("children.*.age", 'numeric', "numericC");
+
+        $this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run(null)));
+        $this->assertEquals(
+            "requiredN,empty,requiredF,requiredA,numericA",
+            $this->map($v->run([
+                'name' => ''
+            ]))
+        );
+        $this->assertEquals(
+            "alphaN,requiredF,requiredA,numericA",
+            $this->map($v->run([
+                'name' => 'g1'
+            ]))
+        );
+        $this->assertEquals(
+            "requiredA,numericA",
+            $this->map($v->run([
+                'name' => 'Ivan',
+                'family' => 'Bozhanov'
+            ]))
+        );
+        $this->assertEquals(
+            "",
+            $this->map($v->run([
+                'name' => 'Ivan',
+                'family' => 'Bozhanov',
+                'age' => '32'
+            ]))
+        );
+        $this->assertEquals(
+            "numericN",
+            $this->map($v->run([
+                'name' => 'Ivan',
+                'family' => 'Bozhanov',
+                'age' => '32',
+                'newsletter' => 'asdf'
+            ]))
+        );
+        $this->assertEquals(
+            "alphaC",
+            $this->map($v->run([
+                'name' => 'Ivan',
+                'family' => 'Bozhanov',
+                'age' => '32',
+                'newsletter' => '1',
+                'children' => [
+                    [ 'name' => '1' ]
+                ]
+            ]))
+        );
+        $this->assertEquals(
+            "",
+            $this->map($v->run([
+                'name' => 'Ivan',
+                'family' => 'Bozhanov',
+                'age' => '32',
+                'newsletter' => '1',
+                'children' => [
+                    [ 'name' => 'a', 'age' => 1 ],
+                    [ 'name' => 'b', 'age' => 2 ]
+                ]
+            ]))
+        );
+    }
 }

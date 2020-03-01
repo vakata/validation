@@ -144,7 +144,7 @@ class Rule
                     $parts[count($parts) - 1] = substr($rule->getKey(), 1);
                     $rule->setKey(implode('.', $parts));
                 }
-                $v->addRule($rule->getKey(), $rule);
+                $v->addRule($rule);
             }
             if (count($v->run($data, $context))) {
                 return true;

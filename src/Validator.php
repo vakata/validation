@@ -23,8 +23,44 @@ class Validator implements JSONSerializable
             }
         }
     }
-    public function addRule(string $key, Rule $rule)
+    public function add(string $key, string $validation, ...$params): self
     {
+        $tmp1 = $this->key;
+        $tmp2 = $this->opt;
+        $this->key = $key;
+        $this->opt = false;
+        if (!method_exists($this, $validation)) {
+            throw new \Exception('Invalid method');
+        }
+        if ($validation !== 'optional') {
+            if ($validation === 'required') {
+                array_unshift($params, $key);
+            }
+            $this->{$validation}(...$params);
+        }
+        $this->key = $tmp1;
+        $this->opt = $tmp2;
+        return $this;
+    }
+    public function addOptional(string $key, string $validation, ...$params): self
+    {
+        $tmp1 = $this->key;
+        $tmp2 = $this->opt;
+        $this->key = $key;
+        $this->opt = true;
+        if (!method_exists($this, $validation)) {
+            throw new \Exception('Invalid method');
+        }
+        if ($validation !== 'optional' && $validation !== 'required') {
+            $this->{$validation}(...$params);
+        }
+        $this->key = $tmp1;
+        $this->opt = $tmp2;
+        return $this;
+    }
+    public function addRule(Rule $rule)
+    {
+        $key = $rule->getKey();
         if (!isset($this->validations[$key])) {
             $this->validations[$key] = [];
         }
