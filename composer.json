@@ -15,13 +15,16 @@
             "role": "Developer"
         }
     ],
-    "require": {
-        "php" : ">=7.0.0"
+    "config" : {
+        "platform" : {
+            "php" : "7.2"
+        },
+        "optimize-autoloader" : true,
+        "sort-packages" : true,
+        "bin-compat": "full"
     },
     "require-dev": {
-        "phpunit/phpunit" : "4.*",
-        "codeclimate/php-test-reporter": "dev-master",
-        "clean/phpdoc-md": "dev-master"
+        "phpunit/phpunit" : "4.*"
     },
     "autoload": {
         "psr-4": {

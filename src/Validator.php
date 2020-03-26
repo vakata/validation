@@ -14,6 +14,7 @@ class Validator implements JSONSerializable
     protected $cond = null;
     protected $when = null;
     protected $validations = [];
+    protected $checked = [];
 
     public function __clone()
     {
@@ -58,17 +59,49 @@ class Validator implements JSONSerializable
         $this->opt = $tmp2;
         return $this;
     }
-    public function addRule(Rule $rule)
+    public function addRule(Rule $rule): self
     {
         $key = $rule->getKey();
         if (!isset($this->validations[$key])) {
             $this->validations[$key] = [];
+            // copy defaults to new item
+            if ($key !== '' && isset($this->validations[''])) {
+                foreach ($this->validations[''] as $r) {
+                    $n = (clone $r)->setKey($key);
+                    if ($r->hasValidator() || $rule->hasValidator()) {
+                        $v = new Validator();
+                        if ($r->hasValidator()) {
+                            foreach ($r->getValidator()->rules() as $rr) {
+                                $v->addRule(clone $rr);
+                            }
+                        }
+                        if ($rule->hasValidator()) {
+                            foreach ($rule->getValidator()->rules() as $rr) {
+                                $v->addRule(clone $rr);
+                            }
+                        }
+                        $n->setValidator($v);
+                    } else {
+                        $n->setValidator(null);
+                    }
+                    $this->validations[$key][] = $n;
+                }
+            }
         }
         $this->validations[$key][] = $rule;
+        // copy new default to existing items
+        if ($key === '') {
+            foreach ($this->validations as $k => $v) {
+                if ($k === '') {
+                    continue;
+                }
+                $this->validations[$k][] = (clone $rule)->setKey($k);
+            }
+        }
         return $this;
     }
 
-    protected function validate($key, $validator, $data, $context)
+    protected function validate($key, $validator, $data, $context): array
     {
         $errors = [];
         $keyParts = explode('.', $key);
@@ -83,7 +116,7 @@ class Validator implements JSONSerializable
                         $temp[] = null;
                     }
                 }
-                if (!$validator->isOptional() || is_array($temp) && count($temp)) {
+                if (!$validator->isOptional() || (is_array($temp) && count($temp))) {
                     foreach ($temp as $k => $v) {
                         $newKey = array_merge(
                             array_slice($keyParts, 0, $index),
@@ -106,6 +139,7 @@ class Validator implements JSONSerializable
             $temp = is_array($temp) && isset($temp[$keyPart]) ? $temp[$keyPart] : null;
         }
         if (strpos($key, '*') === false) {
+            $this->checked[] = $key;
             if ($validator->isOptional() && ($temp === null || $temp === '')) {
                 return [];
             }
@@ -128,13 +162,37 @@ class Validator implements JSONSerializable
      * @param  mixed $context optional context
      * @return array              the errors encountered when validating or an empty array if successful
      */
-    public function run($data, $context = null)
+    public function run($data, $context = null): array
     {
+        $this->checked = [];
         $data = is_array($data) ? $data : [ '' => $data ];
         $errors = [];
         foreach ($this->validations as $key => $validators) {
+            if ($key === '') {
+                continue;
+            }
             foreach ($validators as $validator) {
                 $errors = array_merge($errors, $this->validate($key, $validator, $data, $context));
+            }
+        }
+        if (isset($this->validations['']) && count($this->validations[''])) {
+            $this->checked = array_unique($this->checked);
+            $flat = function (array $data, string $prefix = '') use (&$flat) {
+                foreach ($data as $k => $v) {
+                    if (!is_array($v)) {
+                        yield $prefix . $k;
+                    } else {
+                        yield from $flat($v, $prefix . $k . '.');
+                    }
+                }
+            };
+            foreach ($flat($data) as $key) {
+                if (!in_array($key, $this->checked)) {
+                    // apply default validations to not checked
+                    foreach ($this->validations[''] as $rule) {
+                        $errors = array_merge($errors, $this->validate($key, $rule, $data, $context));
+                    }
+                }
             }
         }
         return $errors;
@@ -150,8 +208,27 @@ class Validator implements JSONSerializable
         }
         return $rules;
     }
-    public function remove($key, $rule = null)
+
+    public function condition($cond = null): self
     {
+        $this->cond = $cond;
+        return $this;
+    }
+
+    public function key(string $key): self
+    {
+        $this->key = $key;
+        return $this;
+    }
+    public function default(): self
+    {
+        return $this->key('');
+    }
+    public function remove(string $key = null, string $rule = null): self
+    {
+        if (!isset($key)) {
+            $key = $this->key;
+        }
         if (isset($this->validations[$key])) {
             if ($rule === null) {
                 unset($this->validations[$key]);
@@ -166,20 +243,17 @@ class Validator implements JSONSerializable
         return $this;
     }
 
-    public function condition($cond = null)
-    {
-        $this->cond = $cond;
-        return $this;
-    }
-
     /**
      * Add a required key to validate.
      * @param  string   $key     the key name
      * @param  string   $message optional message to error with if the key is not present when running the validator
      * @return self
      */
-    public function required($key, $message = '')
+    public function required($key = null, $message = ''): self
     {
+        if (!isset($key)) {
+            $this->key = $key;
+        }
         $this->key = $key;
         $this->opt = false;
         $this->callback(function ($value, $data) {
@@ -192,8 +266,11 @@ class Validator implements JSONSerializable
      * @param  string   $key the key name to look for
      * @return self
      */
-    public function optional($key)
+    public function optional($key = null): self
     {
+        if (!isset($key)) {
+            $this->key = $key;
+        }
         $this->key = $key;
         $this->opt = true;
         return $this;
@@ -206,12 +283,9 @@ class Validator implements JSONSerializable
      * @param  array    $data      optional the rule params (defaults to an empy array)
      * @return self
      */
-    public function callback(callable $handler, $message = '', $rule = 'callback', array $data = [])
+    public function callback(callable $handler, $message = '', $rule = 'callback', array $data = []): self
     {
-        if (!isset($this->validations[$this->key])) {
-            $this->validations[$this->key] = [];
-        }
-        $this->validations[$this->key][] = new Rule(
+        return $this->addRule(new Rule(
             $this->key,
             $handler,
             $message,
@@ -220,8 +294,7 @@ class Validator implements JSONSerializable
             $this->opt,
             is_callable($this->cond) ? $this->cond : null,
             ($this->cond instanceof Validator) ? $this->cond : null
-        );
-        return $this;
+        ));
     }
     /**
      * Add a validation using a regular expression
@@ -229,7 +302,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function regex($regex, $message = '', $name = 'regex', array $data = [])
+    public function regex($regex, $message = '', $name = 'regex', array $data = []): self
     {
         if ($name === 'regex') {
             $data = [$regex];
@@ -239,11 +312,44 @@ class Validator implements JSONSerializable
         }, $message, $name, $data);
     }
     /**
+     * Add a validation using a negative regular expression
+     * @param  string $regex   the regex to validate against
+     * @param  string $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function notRegex($regex, $message = '', $name = 'notRegex', array $data = []): self
+    {
+        if ($name === 'notRegex') {
+            $data = [$regex];
+        }
+        return $this->callback(function ($value, $data) use ($regex) {
+            return !preg_match($regex, $value);
+        }, $message, $name, $data);
+    }
+    public function notLatin($message = ''): self
+    {
+        return $this->notRegex('([a-z]+)i', $message);
+    }
+    public function notNumeric($message = ''): self
+    {
+        return $this->notRegex('(\d+)i', $message);
+    }
+    public function notChars($chars, $message = ''): self
+    {
+        return $this->notRegex('(['.preg_quote($chars).']+)', $message);
+    }
+    public function notInArray(array $target, $message = ''): self
+    {
+        return $this->callback(function ($value, $data) use ($target) {
+            return !in_array($value, $target);
+        }, $message, 'notInArray', [$target]);
+    }
+    /**
      * Add a numeric validation
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function numeric($message = '')
+    public function numeric($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return is_numeric($value);
@@ -255,7 +361,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function chars($chars, $message = '')
+    public function chars($chars, $message = ''): self
     {
         if ($chars === null) {
             $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -268,7 +374,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function latin($allowWhitespace = true, $message = '')
+    public function latin($allowWhitespace = true, $message = ''): self
     {
         return $this->regex(
             $allowWhitespace ? '(^[a-z\s]*$)i' : '(^[a-z]*$)i',
@@ -283,7 +389,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function alpha($allowWhitespace = true, $message = '')
+    public function alpha($allowWhitespace = true, $message = ''): self
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{L}\s]*$)ui' : '(^[\p{L}]*$)ui',
@@ -298,7 +404,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function upper($allowWhitespace = true, $message = '')
+    public function upper($allowWhitespace = true, $message = ''): self
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{Lu}\s]*$)ui' : '(^[\p{Lu}]*$)ui',
@@ -313,7 +419,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function lower($allowWhitespace = true, $message = '')
+    public function lower($allowWhitespace = true, $message = ''): self
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{Ll}\s]*$)ui' : '(^[\p{Ll}]*$)ui',
@@ -328,7 +434,7 @@ class Validator implements JSONSerializable
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function alphanumeric($allowWhitespace = true, $message = '')
+    public function alphanumeric($allowWhitespace = true, $message = ''): self
     {
         return $this->regex(
             $allowWhitespace ? '(^[\p{L}0-9\s]*$)ui' : '(^[\p{L}0-9]*$)ui',
@@ -337,12 +443,16 @@ class Validator implements JSONSerializable
             [$allowWhitespace]
         );
     }
+    public function empty(): self
+    {
+        return $this->equals('');
+    }
     /**
      * Add a not empty validation (fails on empty string)
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function notEmpty($message = '')
+    public function notEmpty($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return is_string($value) ? strlen($value) > 0 : !!$value;
@@ -353,7 +463,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function mail($message = '')
+    public function mail($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_EMAIL) !== false;
@@ -364,7 +474,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function float($message = '')
+    public function float($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_FLOAT) !== false;
@@ -375,7 +485,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function int($message = '')
+    public function int($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_INT) !== false;
@@ -387,7 +497,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function min($min, $message = '')
+    public function min($min, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($min) {
             return $value >= $min;
@@ -399,7 +509,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function max($max, $message = '')
+    public function max($max, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($max) {
             return $value <= $max;
@@ -412,7 +522,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function between($min, $max, $message = '')
+    public function between($min, $max, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($min, $max) {
             return $value >= $min && $value <= $max;
@@ -424,7 +534,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function equals($target, $message = '')
+    public function equals($target, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($target) {
             return $value == $target;
@@ -436,7 +546,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function length($length, $message = '')
+    public function length($length, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') == $length;
@@ -448,7 +558,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function minLength($length, $message = '')
+    public function minLength($length, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') >= $length;
@@ -460,7 +570,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function maxLength($length, $message = '')
+    public function maxLength($length, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($length) {
             return mb_strlen((string)$value, 'utf-8') <= $length;
@@ -472,7 +582,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function inArray(array $target, $message = '')
+    public function inArray(array $target, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($target) {
             return in_array($value, $target);
@@ -507,7 +617,7 @@ class Validator implements JSONSerializable
      * @param string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function date($format = null, $message = '')
+    public function date($format = null, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($format) {
             return $this->parseDate($value, $format) !== false;
@@ -520,7 +630,7 @@ class Validator implements JSONSerializable
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function minDate($min, $format = null, $message = '')
+    public function minDate($min, $format = null, $message = ''): self
     {
         $min = $this->parseDate($min, $format);
         return $this->callback(function ($value, $data) use ($min, $format) {
@@ -535,7 +645,7 @@ class Validator implements JSONSerializable
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function maxDate($max, $format = null, $message = '')
+    public function maxDate($max, $format = null, $message = ''): self
     {
         $max = $this->parseDate($max, $format);
         return $this->callback(function ($value, $data) use ($max, $format) {
@@ -551,7 +661,7 @@ class Validator implements JSONSerializable
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function betweenDate($min, $max, $format = null, $message = '')
+    public function betweenDate($min, $max, $format = null, $message = ''): self
     {
         $min = $this->parseDate($min, $format);
         $max = $this->parseDate($max, $format);
@@ -568,7 +678,7 @@ class Validator implements JSONSerializable
      * @param  string              $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function age($age, $rel = null, $format = null, $message = '')
+    public function age($age, $rel = null, $format = null, $message = ''): self
     {
         $rel = $rel ? $this->parseDate($rel, $format) : time();
         return $this->callback(function ($value, $data) use ($age, $rel, $format) {
@@ -581,7 +691,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function json($message = '')
+    public function json($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return json_decode($value, true) !== null;
@@ -592,7 +702,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function ip($message = '')
+    public function ip($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return filter_var($value, FILTER_VALIDATE_IP) !== false;
@@ -604,7 +714,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function url($protocols = null, $message = '')
+    public function url($protocols = null, $message = ''): self
     {
         if (!is_array($protocols)) {
             $protocols = [ 'http', 'https' ];
@@ -630,7 +740,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function mod10($message = '')
+    public function mod10($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
@@ -642,7 +752,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function imei($message = '')
+    public function imei($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(\D)', '', $value);
@@ -656,7 +766,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function creditcard(array $types = null, $message = '')
+    public function creditcard(array $types = null, $message = ''): self
     {
         $cards = [
             'visa' => '(^4[0-9]{12}(?:[0-9]{3})?$)',
@@ -693,7 +803,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function iban($message = '')
+    public function iban($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             $value = str_replace([' ','-'], '', strtolower($value));
@@ -722,7 +832,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function uuid($message = '')
+    public function uuid($message = ''): self
     {
         return $this->regex(
             '(^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$)i',
@@ -735,7 +845,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function mac($message = '')
+    public function mac($message = ''): self
     {
         return $this->regex('(^(([0-9a-fA-F]{2}-){5}|([0-9a-fA-F]{2}:){5})[0-9a-fA-F]{2}$)', $message, 'mac');
     }
@@ -786,7 +896,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgEGN($message = '')
+    public function bgEGN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value);
@@ -797,7 +907,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgLNC($message = '')
+    public function bgLNC($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return $this->lnc($value);
@@ -808,7 +918,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgIDN($message = '')
+    public function bgIDN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) || $this->lnc($value);
@@ -819,7 +929,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgMaleEGN($message = '')
+    public function bgMaleEGN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 0;
@@ -830,7 +940,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgFemaleEGN($message = '')
+    public function bgFemaleEGN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             return $this->egn($value) && substr($value, 8, 1) % 2 === 1;
@@ -841,7 +951,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgBulstat($message = '')
+    public function bgBulstat($message = ''): self
     {
         return $this->callback(function ($value, $data) {
             $value = preg_replace('(^BG)', '', $value);
@@ -883,7 +993,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function bgName($message = '')
+    public function bgName($message = ''): self
     {
         return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message, 'bgName');
     }
@@ -893,7 +1003,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function minRelation($min, $message = '')
+    public function minRelation($min, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($min) {
             return isset($data[$min]) && $value >= $data[$min];
@@ -905,7 +1015,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function maxRelation($max, $message = '')
+    public function maxRelation($max, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($max) {
             return isset($data[$max]) && $value <= $data[$max];
@@ -918,7 +1028,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function minDateRelation($min, $format = null, $message = '')
+    public function minDateRelation($min, $format = null, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($min, $format) {
             if (!isset($data[$min])) {
@@ -933,7 +1043,7 @@ class Validator implements JSONSerializable
      * @param  string $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function maxDateRelation($max, $format = null, $message = '')
+    public function maxDateRelation($max, $format = null, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($max, $format) {
             if (!isset($data[$max])) {
@@ -948,7 +1058,7 @@ class Validator implements JSONSerializable
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function equalsRelation($target, $message = '')
+    public function equalsRelation($target, $message = ''): self
     {
         return $this->callback(function ($value, $data) use ($target) {
             return isset($data[$target]) && $value == $data[$target];

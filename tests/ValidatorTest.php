@@ -295,11 +295,23 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $this->map($v->run(['key' => 'aa'])));
         $this->assertEquals("err", $this->map($v->run(['key' => '1a'])));
     }
+    public function testNotRegex() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->notRegex('([a-z])', 'err');
+        $this->assertEquals("", $this->map($v->run(['key' => '1'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => 'a'])));
+    }
     public function testNumeric() {
         $v = new \vakata\validation\Validator();
         $v->optional('key')->numeric('err');
         $this->assertEquals("", $this->map($v->run(['key' => '12'])));
         $this->assertEquals("err", $this->map($v->run(['key' => '1a'])));
+    }
+    public function testNotNumeric() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->notNumeric('err');
+        $this->assertEquals("", $this->map($v->run(['key' => 'a'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => 'a1a'])));
     }
     public function testChars() {
         $v = new \vakata\validation\Validator();
@@ -307,11 +319,23 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $this->map($v->run(['key' => 'aabbbcaaa'])));
         $this->assertEquals("err", $this->map($v->run(['key' => 'a1'])));
     }
+    public function testNotChars() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->notChars('abc', 'err');
+        $this->assertEquals("", $this->map($v->run(['key' => 'ghj'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => 'gha'])));
+    }
     public function testLatin() {
         $v = new \vakata\validation\Validator();
         $v->optional('key')->latin(false, 'err');
         $this->assertEquals("", $this->map($v->run(['key' => 'aabbbcaaa'])));
         $this->assertEquals("err", $this->map($v->run(['key' => 'a1'])));
+    }
+    public function testNotLatin() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->notLatin('err');
+        $this->assertEquals("", $this->map($v->run(['key' => '1'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => 'a'])));
     }
     public function testAlpha() {
         $v = new \vakata\validation\Validator();
@@ -450,6 +474,12 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("", $this->map($v->run(['key' => '3'])));
         $this->assertEquals("", $this->map($v->run(['key' => ''])));
         $this->assertEquals("err", $this->map($v->run(['key' => 'asdf'])));
+    }
+    public function testNotInArray() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->notInArray([1,2,3], 'err');
+        $this->assertEquals("", $this->map($v->run(['key' => '4'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => '1'])));
     }
     public function testDate() {
         $v = new \vakata\validation\Validator();
@@ -811,6 +841,21 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("req2", $this->map($v->run(['key2'=>'2'])));
         $this->assertEquals("req1,req2", $this->map($v->run(['key1'=>'1','key2'=>'2'])));
     }
+    public function testNestedRelativeValidator()
+    {
+        $v = new \vakata\validation\Validator();
+        $i = new \vakata\validation\Validator();
+        $i
+            ->required('.name')->equals('1');
+        $v
+            ->condition($i)
+                ->required('key.num', 'req');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1', 'num' => '']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1']])));
+    }
     public function testAdd() {
         $v = new \vakata\validation\Validator();
         $v
@@ -887,5 +932,59 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
                 ]
             ]))
         );
+    }
+    public function testDefaults()
+    {
+        $v = new \vakata\validation\Validator();
+        $i = new \vakata\validation\Validator();
+        $i
+            ->required('.name')->equals('1');
+        $v
+            ->default()->numeric('numeric')
+            ->condition($i)
+                ->required('key.num', 'req');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("numeric", $this->map($v->run(['key'=>['name' => '1', 'num' => 'a']])));
+        $this->assertEquals("numeric,req", $this->map($v->run(['key'=>['name' => '1']])));
+    }
+    public function testConditionalDefaults()
+    {
+        $v = new \vakata\validation\Validator();
+        $i = new \vakata\validation\Validator();
+        $g = new \vakata\validation\Validator();
+        $i->required('.name')->equals('1');
+        $g->required('cond')->equals('1');
+        $v
+            ->default()
+                ->condition($g)
+                ->numeric('numeric')
+            ->condition($i)
+                ->required('key.num', 'req');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => 'a']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1']])));
+        $this->assertEquals("numeric", $this->map($v->run(['key'=>['name' => '1', 'num' => 'a'], 'cond' => 1])));
+        $this->assertEquals("numeric,req", $this->map($v->run(['key'=>['name' => '1'], 'cond' => 1])));
+    }
+    public function testRemoveDefaults()
+    {
+        $v = new \vakata\validation\Validator();
+        $i = new \vakata\validation\Validator();
+        $i
+            ->required('.name')->equals('1');
+        $v
+            ->default()->numeric('numeric')
+            ->condition($i)
+                ->required('key.num', 'req')
+                ->remove('key.num', 'numeric');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => 'a']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1']])));
     }
 }
