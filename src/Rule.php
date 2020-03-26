@@ -41,7 +41,7 @@ class Rule
     {
         return $this->key;
     }
-    public function setKey(string $key): Rule
+    public function setKey(string $key): self
     {
         $this->key = $key;
         return $this;
@@ -75,56 +75,56 @@ class Rule
         return !$this->enabled;
     }
 
-    public function setMessage(string $message): Rule
+    public function setMessage(string $message): self
     {
         $this->message = $message;
         return $this;
     }
-    public function setData(array $data): Rule
+    public function setData(array $data): self
     {
         $this->data = $data;
         return $this;
     }
-    public function required(): Rule
+    public function required(): self
     {
         $this->optional = false;
         return $this;
     }
-    public function optional(): Rule
+    public function optional(): self
     {
         $this->optional = true;
         return $this;
     }
-    public function disable(): Rule
+    public function disable(): self
     {
         $this->enabled = false;
         return $this;
     }
-    public function enable(): Rule
+    public function enable(): self
     {
         $this->enabled = true;
         return $this;
     }
 
-    public function hasCondition()
+    public function hasCondition(): bool
     {
         return $this->condition !== null;
     }
-    public function setCondition(callable $condition = null)
+    public function setCondition(callable $condition = null): self
     {
         $this->condition !== $condition;
         return $this;
     }
 
-    public function hasValidator()
+    public function hasValidator(): bool
     {
         return $this->validator !== null;
     }
-    public function getValidator()
+    public function getValidator(): ?Validator
     {
         return $this->validator;
     }
-    public function setValidator(Validator $validator)
+    public function setValidator(?Validator $validator = null): self
     {
         $this->validator = $validator;
         return $this;
