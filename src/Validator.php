@@ -1065,7 +1065,7 @@ class Validator implements JSONSerializable
         }, $message, 'equalsRelation', [$target, null]);
     }
 
-    public function jsonSerialize()
+    public function jsonSerialize(): mixed
     {
         return array_map(function ($v) {
             return array_map(function ($vv) {
