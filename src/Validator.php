@@ -1035,7 +1035,7 @@ class Validator implements JSONSerializable
                 return false;
             }
             return $this->parseDate($value, $format) >= $this->parseDate($data[$min], $format);
-        }, $message, 'minDateRelation', [$min, null, $format]);
+        }, $message, 'minDateRelation', [$min, $format, null]);
     }
     /**
      * Add a max validation related to another field in the validator (the current field should be greater or equal)
@@ -1050,7 +1050,7 @@ class Validator implements JSONSerializable
                 return false;
             }
             return $this->parseDate($value, $format) <= $this->parseDate($data[$max], $format);
-        }, $message, 'maxDateRelation', [$max, null, $format]);
+        }, $message, 'maxDateRelation', [$max, $format, null]);
     }
     /**
      * Add an equals validation related to another field
