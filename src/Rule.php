@@ -15,7 +15,7 @@ class Rule
     protected $optional;
     protected $enabled;
     protected $condition;
-    protected $when;
+    protected $validator;
 
     public function __construct(
         string $key,
