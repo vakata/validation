@@ -1,21 +1,12 @@
 <?php
 namespace vakata\validation\test;
 
-class ValidatorTest extends \PHPUnit_Framework_TestCase
+class ValidatorTest extends \PHPUnit\Framework\TestCase
 {
-    public static function setUpBeforeClass() {
-    }
-    public static function tearDownAfterClass() {
-    }
-    protected function setUp() {
-    }
-    protected function tearDown() {
-    }
-
     protected function map(array $errors) {
         $rtrn = [];
         foreach ($errors as $error) {
-            if (isset($error['message'])) {
+            if (is_array($error) && isset($error['message'])) {
                 $rtrn[] = $error['message'];
             }
         }
@@ -483,12 +474,12 @@ class ValidatorTest extends \PHPUnit_Framework_TestCase
     }
     public function testDate() {
         $v = new \vakata\validation\Validator();
-        
+
         $v->optional('ts')->date(null, 'err1');
         $this->assertEquals("", $this->map($v->run(['ts' => time()])));
         $this->assertEquals("", $this->map($v->run(['ts' => '01.02.2016'])));
         $this->assertEquals("err1", $this->map($v->run(['ts' => 's/2016-1 asdf'])));
-        
+
         $v->optional('date1')->date('d.m.Y', 'err2');
         $this->assertEquals("err2", $this->map($v->run(['date1' => time()])));
         $this->assertEquals("", $this->map($v->run(['date1' => '01.02.2016'])));

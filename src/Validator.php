@@ -606,7 +606,7 @@ class Validator implements JSONSerializable
         }
         $value = date_create_from_format($format, (string)$value);
         $debug = date_get_last_errors();
-        if ($value === false || $debug['warning_count'] !== 0 || $debug['error_count'] !== 0) {
+        if ($value === false || ($debug !== false && ($debug['warning_count'] !== 0 || $debug['error_count'] !== 0))) {
             return false;
         }
         return $value->getTimestamp();
@@ -823,7 +823,7 @@ class Validator implements JSONSerializable
                 $iban = substr($iban, 5);
                 $mod  = $new % 97;
             } while (strlen($iban));
-            
+
             return $mod === 1;
         }, $message, 'iban');
     }
