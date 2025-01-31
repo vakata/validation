@@ -17,7 +17,7 @@
     ],
     "config" : {
         "platform" : {
-            "php" : "8.4"
+            "php" : "8.3"
         },
         "optimize-autoloader" : true,
         "sort-packages" : true,
