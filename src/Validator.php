@@ -197,7 +197,7 @@ class Validator implements JSONSerializable
         }
         return $errors;
     }
-    public function rules(string $key = null): array
+    public function rules(?string $key = null): array
     {
         if ($key !== null) {
             return $this->validations[$key] ?? [];
@@ -224,7 +224,7 @@ class Validator implements JSONSerializable
     {
         return $this->key('');
     }
-    public function remove(string $key = null, string $rule = null): self
+    public function remove(?string $key = null, ?string $rule = null): self
     {
         if (!isset($key)) {
             $key = $this->key;
@@ -357,11 +357,11 @@ class Validator implements JSONSerializable
     }
     /**
      * Add an allowed chars validation
-     * @param  string  $chars string of allowed chars
+     * @param  ?string  $chars string of allowed chars
      * @param  string  $message optional message to include in the report if the validation fails
      * @return self
      */
-    public function chars($chars, $message = ''): self
+    public function chars(?string $chars = null, string $message = ''): self
     {
         if ($chars === null) {
             $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -530,7 +530,7 @@ class Validator implements JSONSerializable
     }
     /**
      * Add an equals validation
-     * @param  integer $target  the value that the input should be equal to
+     * @param  scalar $target  the value that the input should be equal to
      * @param  string  $message an optional message to include in the report if the validation fails
      * @return self
      */
@@ -731,6 +731,7 @@ class Validator implements JSONSerializable
         }
         $value = array_reverse(str_split($value));
         foreach ($value as $k => $digit) {
+            $digit = (int)$digit;
             $value[$k] = $digit ? (($digit * ($k % 2 ? 2 : 1)) % 9 ?: 9) : 0;
         }
         return array_sum($value) % 10 === 0;
@@ -766,7 +767,7 @@ class Validator implements JSONSerializable
      * @param  string     $message an optional message to include in the report if the validation fails
      * @return self
      */
-    public function creditcard(array $types = null, $message = ''): self
+    public function creditcard(?array $types = null, $message = ''): self
     {
         $cards = [
             'visa' => '(^4[0-9]{12}(?:[0-9]{3})?$)',
@@ -811,8 +812,9 @@ class Validator implements JSONSerializable
                 return false;
             }
             $chars = [
-                'a'=>10,'b'=>11,'c'=>12,'d'=>13,'e'=>14,'f'=>15,'g'=>16,'h'=>17,'i'=>18,'j'=>19,'k'=>20,'l'=>21,'m'=>22,
-                'n'=>23,'o'=>24,'p'=>25,'q'=>26,'r'=>27,'s'=>28,'t'=>29,'u'=>30,'v'=>31,'w'=>32,'x'=>33,'y'=>34,'z'=>35
+                'a'=>'10','b'=>'11','c'=>'12','d'=>'13','e'=>'14','f'=>'15','g'=>'16','h'=>'17','i'=>'18','j'=>'19',
+                'k'=>'20','l'=>'21','m'=>'22','n'=>'23','o'=>'24','p'=>'25','q'=>'26','r'=>'27','s'=>'28','t'=>'29',
+                'u'=>'30','v'=>'31','w'=>'32','x'=>'33','y'=>'34','z'=>'35'
             ];
             $iban = substr($value, 4) . substr($value, 0, 4);
             $iban = str_replace(array_keys($chars), array_values($chars), $iban);
@@ -821,7 +823,7 @@ class Validator implements JSONSerializable
             do {
                 $new  = $mod . substr($iban, 0, 5);
                 $iban = substr($iban, 5);
-                $mod  = $new % 97;
+                $mod  = (int)$new % 97;
             } while (strlen($iban));
 
             return $mod === 1;
@@ -854,9 +856,9 @@ class Validator implements JSONSerializable
         if (!ctype_digit($value) || strlen($value) !== 10) {
             return false;
         }
-        $year  = substr($value, 0, 2);
-        $month = substr($value, 2, 2);
-        $day   = substr($value, 4, 2);
+        $year  = (int)substr($value, 0, 2);
+        $month = (int)substr($value, 2, 2);
+        $day   = (int)substr($value, 4, 2);
         if ($month > 40) {
             $month -= 40;
             $year  += 2000;
@@ -866,7 +868,7 @@ class Validator implements JSONSerializable
         } else {
             $year  += 1900;
         }
-        if (!checkdate((int)$month, (int)$day, (int)$year)) {
+        if (!checkdate($month, $day, $year)) {
             return false;
         }
 
@@ -874,7 +876,7 @@ class Validator implements JSONSerializable
         $check = array_pop($value);
         $weights = [ 2, 4, 8, 5, 10, 9, 7, 3, 6 ];
         foreach ($value as $k => $v) {
-            $value[$k] = $v * $weights[$k];
+            $value[$k] = (int)$v * $weights[$k];
         }
         return (array_sum($value) % 11) % 10 === (int)$check;
     }
@@ -887,7 +889,7 @@ class Validator implements JSONSerializable
         $check = array_pop($value);
         $weights = [ 21, 19, 17, 13, 11, 9, 7, 3, 1 ];
         foreach ($value as $k => $v) {
-            $value[$k] = $v * $weights[$k];
+            $value[$k] = (int)$v * $weights[$k];
         }
         return array_sum($value) % 10 === (int)$check;
     }
@@ -932,7 +934,7 @@ class Validator implements JSONSerializable
     public function bgMaleEGN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
-            return $this->egn($value) && substr($value, 8, 1) % 2 === 0;
+            return $this->egn($value) && (int)substr($value, 8, 1) % 2 === 0;
         }, $message, 'bgMaleEGN');
     }
     /**
@@ -943,7 +945,7 @@ class Validator implements JSONSerializable
     public function bgFemaleEGN($message = ''): self
     {
         return $this->callback(function ($value, $data) {
-            return $this->egn($value) && substr($value, 8, 1) % 2 === 1;
+            return $this->egn($value) && (int)substr($value, 8, 1) % 2 === 1;
         }, $message, 'bgFemaleEGN');
     }
     /**
@@ -959,6 +961,9 @@ class Validator implements JSONSerializable
                 return false;
             }
             $value = str_split($value);
+            foreach ($value as $k => $v) {
+                $value[$k] = (int)$v;
+            }
             $sum = 0;
             for ($i = 0; $i < 8; $i++) {
                 $sum += $value[$i] * ($i + 1);

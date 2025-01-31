@@ -24,8 +24,8 @@ class Rule
         string $rule = 'callback',
         array $data = [],
         bool $optional = true,
-        callable $condition = null,
-        Validator $validator = null
+        ?callable $condition = null,
+        ?Validator $validator = null
     ) {
         $this->key = $key;
         $this->handler = $handler;
@@ -110,9 +110,9 @@ class Rule
     {
         return $this->condition !== null;
     }
-    public function setCondition(callable $condition = null): self
+    public function setCondition(?callable $condition = null): self
     {
-        $this->condition !== $condition;
+        $this->condition = $condition;
         return $this;
     }
 
