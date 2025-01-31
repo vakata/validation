@@ -2,12 +2,12 @@
 
 namespace vakata\validation;
 
-use JSONSerializable;
+use JsonSerializable;
 
 /**
  * A validation class, supporting arrays and nested arrays of data.
  */
-class Validator implements JSONSerializable
+class Validator implements JsonSerializable
 {
     protected $key = '';
     protected $opt = false;
