@@ -2,6 +2,7 @@
 
 namespace vakata\validation;
 
+use Closure;
 use JsonSerializable;
 
 /**
@@ -9,18 +10,22 @@ use JsonSerializable;
  */
 class Validator implements JsonSerializable
 {
-    protected $key = '';
-    protected $opt = false;
-    protected $cond = null;
-    protected $when = null;
-    protected $validations = [];
-    protected $checked = [];
+    protected string $key = '';
+    protected bool $opt = false;
+    protected Closure|Validator|null $cond = null;
+    /** @var array<string,list<Rule>> */
+    protected array $validations = [];
+    /** @var list<string> $checked */
+    protected array $checked = [];
 
     public function __clone()
     {
+        if ($this->cond) {
+            $this->cond = clone $this->cond;
+        }
         foreach ($this->validations as $k => $rules) {
             foreach ($rules as $kk => $rule) {
-                $this->validations[$k][$kk] = (clone $rule);
+                $this->validations[$k][$kk] = clone $rule;
             }
         }
     }
@@ -158,14 +163,13 @@ class Validator implements JsonSerializable
 
     /**
      * Run the validator on the passed data
-     * @param  array|string $data the data to validate
+     * @param  array $data the data to validate
      * @param  mixed $context optional context
      * @return array              the errors encountered when validating or an empty array if successful
      */
-    public function run($data, $context = null): array
+    public function run(array $data, $context = null): array
     {
         $this->checked = [];
-        $data = is_array($data) ? $data : [ '' => $data ];
         $errors = [];
         foreach ($this->validations as $key => $validators) {
             if ($key === '') {
@@ -213,9 +217,9 @@ class Validator implements JsonSerializable
         return $rules;
     }
 
-    public function condition($cond = null): self
+    public function condition(Closure|Validator|null $cond = null): self
     {
-        $this->cond = $cond;
+        $this->cond = is_callable($cond) ? Closure::fromCallable($cond) : $cond;
         return $this;
     }
 
@@ -246,17 +250,16 @@ class Validator implements JsonSerializable
         }
         return $this;
     }
-
     /**
      * Add a required key to validate.
-     * @param  string   $key     the key name
+     * @param  ?string   $key     the key name
      * @param  string   $message optional message to error with if the key is not present when running the validator
      * @return self
      */
-    public function required($key = null, $message = ''): self
+    public function required(?string $key = null, string $message = ''): self
     {
         if (!isset($key)) {
-            $this->key = $key;
+            $key = $this->key;
         }
         $this->key = $key;
         $this->opt = false;
@@ -267,13 +270,13 @@ class Validator implements JsonSerializable
     }
     /**
      * Add an optional key to validate - the validations that follow will only run if the key is present.
-     * @param  string   $key the key name to look for
+     * @param  ?string   $key the key name to look for
      * @return self
      */
-    public function optional($key = null): self
+    public function optional(?string $key = null): self
     {
         if (!isset($key)) {
-            $this->key = $key;
+            $key = $this->key;
         }
         $this->key = $key;
         $this->opt = true;
@@ -1005,6 +1008,19 @@ class Validator implements JsonSerializable
     public function bgName($message = ''): self
     {
         return $this->regex('(^([А-Я][a-я]*( |-| - ))+([А-Я][a-я]*)$)u', $message, 'bgName');
+    }
+    /**
+     * Add a Bulgarian IDCard validation
+     * @param  string     $message an optional message to include in the report if the validation fails
+     * @return self
+     */
+    public function bgIDCard($message = ''): self
+    {
+        return $this->regex(
+            '((^[A-Z]{2}\d{7}$)|(^\d{9}$))',
+            $message,
+            'bgIDCard'
+        );
     }
     /**
      * Add a min validation related to another field in the validator (the current field should be greater or equal)

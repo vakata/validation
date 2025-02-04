@@ -2,20 +2,22 @@
 
 namespace vakata\validation;
 
+use Closure;
+
 /**
  * A validation class, supporting arrays and nested arrays of data.
  */
 class Rule
 {
-    protected $key;
-    protected $handler;
-    protected $message;
-    protected $rule;
-    protected $data;
-    protected $optional;
-    protected $enabled;
-    protected $condition;
-    protected $validator;
+    protected string $key;
+    protected Closure $handler;
+    protected string $message;
+    protected string $rule;
+    protected array $data;
+    protected bool $optional;
+    protected bool $enabled;
+    protected ?Closure $condition;
+    protected ?Validator $validator;
 
     public function __construct(
         string $key,
@@ -28,14 +30,24 @@ class Rule
         ?Validator $validator = null
     ) {
         $this->key = $key;
-        $this->handler = $handler;
+        $this->handler = Closure::fromCallable($handler);
         $this->message = $message;
         $this->rule = $rule;
         $this->data = $data;
         $this->optional = $optional;
         $this->enabled = true;
-        $this->condition = $condition;
+        $this->condition = is_callable($condition) ? Closure::fromCallable($condition) : $condition;
         $this->validator = $validator;
+    }
+    public function __clone()
+    {
+        $this->handler = clone $this->handler;
+        if ($this->validator) {
+            $this->validator = clone $this->validator;
+        }
+        if ($this->condition) {
+            $this->condition = clone $this->condition;
+        }
     }
     public function getKey(): string
     {
@@ -112,7 +124,7 @@ class Rule
     }
     public function setCondition(?callable $condition = null): self
     {
-        $this->condition = $condition;
+        $this->condition = is_callable($condition) ? Closure::fromCallable($condition) : $condition;
         return $this;
     }
 
@@ -150,8 +162,6 @@ class Rule
                 return true;
             }
         }
-        return !$this->hasCondition() || call_user_func($this->condition, $value, $data, $context) ?
-            call_user_func($this->handler, $value, $data, $context) :
-            true;
+        return call_user_func($this->handler, $value, $data, $context);
     }
 }

@@ -16,14 +16,14 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testOneKey() {
         $v = new \vakata\validation\Validator();
         $v->numeric("numeric");
-        $this->assertEquals([['key'=>'','message'=>'numeric','value'=>'not-numeric','rule'=>'numeric','data'=>[]]], $v->run("not-numeric"));
-        $this->assertEquals([], $v->run("1"));
+        $this->assertEquals([['key'=>'','message'=>'numeric','value'=>'not-numeric','rule'=>'numeric','data'=>[]]], $v->run([''=>"not-numeric"]));
+        $this->assertEquals([], $v->run([''=>"1"]));
     }
     public function testRequired() {
         $v = new \vakata\validation\Validator();
         $v->required("req", "required");
-        $this->assertEquals("required", $this->map($v->run(null)));
-        $this->assertEquals("required", $this->map($v->run("non-array")));
+        $this->assertEquals("required", $this->map($v->run([''=>null])));
+        $this->assertEquals("required", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required", $this->map($v->run(["req"=>''])));
         $this->assertEquals("", $this->map($v->run(["req"=>'1'])));
@@ -32,8 +32,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testRequiredArray() {
         $v = new \vakata\validation\Validator();
         $v->required("req1", "required1")->required("req2", "required2");
-        $this->assertEquals("required1,required2", $this->map($v->run(null)));
-        $this->assertEquals("required1,required2", $this->map($v->run("non-array")));
+        $this->assertEquals("required1,required2", $this->map($v->run([''=>null])));
+        $this->assertEquals("required1,required2", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required1,required2", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required1,required2", $this->map($v->run(["req1"=>''])));
         $this->assertEquals("required1,required2", $this->map($v->run(["req2"=>''])));
@@ -45,8 +45,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->required("req1", "required1")->required("req2", "required2");
         $v->rules('req2')[0]->disable();
-        $this->assertEquals("required1", $this->map($v->run(null)));
-        $this->assertEquals("required1", $this->map($v->run("non-array")));
+        $this->assertEquals("required1", $this->map($v->run([''=>null])));
+        $this->assertEquals("required1", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required1", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required1", $this->map($v->run(["req1"=>''])));
         $this->assertEquals("required1", $this->map($v->run(["req2"=>''])));
@@ -57,8 +57,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testRequiredChain() {
         $v = new \vakata\validation\Validator();
         $v->required("req", "required")->numeric("numeric");
-        $this->assertEquals("required,numeric", $this->map($v->run(null)));
-        $this->assertEquals("required,numeric", $this->map($v->run("non-array")));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>null])));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["req"=>''])));
         $this->assertEquals("numeric", $this->map($v->run(["req"=>'a'])));
@@ -67,8 +67,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testRequiredOptionalArray() {
         $v = new \vakata\validation\Validator();
         $v->required("req1", "required")->optional("req2")->numeric("numeric");
-        $this->assertEquals("required", $this->map($v->run(null)));
-        $this->assertEquals("required", $this->map($v->run("non-array")));
+        $this->assertEquals("required", $this->map($v->run([''=>null])));
+        $this->assertEquals("required", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required", $this->map($v->run(["req2"=>''])));
         $this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>''])));
@@ -79,8 +79,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testRequiredNestedArray() {
         $v = new \vakata\validation\Validator();
         $v->required('test.nested', 'required')->numeric('numeric');
-        $this->assertEquals("required,numeric", $this->map($v->run(null)));
-        $this->assertEquals("required,numeric", $this->map($v->run("non-array")));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>null])));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
@@ -92,8 +92,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
     public function testOptionalNestedArray() {
         $v = new \vakata\validation\Validator();
         $v->optional('test.nested')->numeric('numeric');
-        $this->assertEquals("", $this->map($v->run(null)));
-        $this->assertEquals("", $this->map($v->run("non-array")));
+        $this->assertEquals("", $this->map($v->run([''=>null])));
+        $this->assertEquals("", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>[]])));
@@ -106,8 +106,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->required('test.*', "required")->numeric("numeric");
 
-        $this->assertEquals("required,numeric", $this->map($v->run(null)));
-        $this->assertEquals("required,numeric", $this->map($v->run("non-array")));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>null])));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
@@ -122,8 +122,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->optional('test.*')->numeric("numeric");
 
-        $this->assertEquals("", $this->map($v->run(null)));
-        $this->assertEquals("", $this->map($v->run("non-array")));
+        $this->assertEquals("", $this->map($v->run([''=>null])));
+        $this->assertEquals("", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>[]])));
@@ -138,8 +138,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->required('test.*.id', "required")->numeric("numeric");
 
-        $this->assertEquals("required,numeric", $this->map($v->run(null)));
-        $this->assertEquals("required,numeric", $this->map($v->run("non-array")));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>null])));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
@@ -156,8 +156,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->optional('test.*.id')->numeric("numeric");
 
-        $this->assertEquals("", $this->map($v->run(null)));
-        $this->assertEquals("", $this->map($v->run("non-array")));
+        $this->assertEquals("", $this->map($v->run([''=>null])));
+        $this->assertEquals("", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>[]])));
@@ -174,8 +174,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->required('test.*.id.*', "required")->numeric("numeric");
 
-        $this->assertEquals("required,numeric", $this->map($v->run(null)));
-        $this->assertEquals("required,numeric", $this->map($v->run("non-array")));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>null])));
+        $this->assertEquals("required,numeric", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("required,numeric", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>''])));
         $this->assertEquals("required,numeric", $this->map($v->run(["test"=>[]])));
@@ -193,8 +193,8 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v = new \vakata\validation\Validator();
         $v->optional('test.*.id.*')->numeric("numeric");
 
-        $this->assertEquals("", $this->map($v->run(null)));
-        $this->assertEquals("", $this->map($v->run("non-array")));
+        $this->assertEquals("", $this->map($v->run([''=>null])));
+        $this->assertEquals("", $this->map($v->run([''=>"non-array"])));
         $this->assertEquals("", $this->map($v->run(["wrong"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>''])));
         $this->assertEquals("", $this->map($v->run(["test"=>[]])));
@@ -218,7 +218,7 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
             ->optional("children.*.name")->alpha(null, "alphaC")
             ->optional("children.*.age")->numeric("numericC");
 
-        $this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run(null)));
+        $this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run([''=>null])));
         $this->assertEquals(
             "requiredN,empty,requiredF,requiredA,numericA",
             $this->map($v->run([
@@ -719,6 +719,15 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals("", $this->map($v->run(['key' => '119044990'])));
         $this->assertEquals("err", $this->map($v->run(['key' => '119044991'])));
     }
+    public function testBgIDCard() {
+        $v = new \vakata\validation\Validator();
+        $v->optional('key')->bgIDCard('err');
+        $this->assertEquals("", $this->map($v->run(['key' => '119044990'])));
+        $this->assertEquals("", $this->map($v->run(['key' => 'AA9044990'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => '1190449917'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => 'A19044991'])));
+        $this->assertEquals("err", $this->map($v->run(['key' => '11904499'])));
+    }
     public function testBgName() {
         $v = new \vakata\validation\Validator();
         $v->optional('key')->bgName('err');
@@ -896,7 +905,7 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
             ->addOptional("children.*.name", 'alpha', null, "alphaC")
             ->addOptional("children.*.age", 'numeric', "numericC");
 
-        $this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run(null)));
+        $this->assertEquals("requiredN,empty,requiredF,requiredA,numericA", $this->map($v->run([''=>null])));
         $this->assertEquals(
             "requiredN,empty,requiredF,requiredA,numericA",
             $this->map($v->run([
