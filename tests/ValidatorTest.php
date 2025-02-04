@@ -41,6 +41,19 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals("required1", $this->map($v->run(["req1"=>'',"req2"=>'1'])));
         $this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>'1'])));
     }
+    public function testDisabled() {
+        $v = new \vakata\validation\Validator();
+        $v->required("req1", "required1")->required("req2", "required2");
+        $v->rules('req2')[0]->disable();
+        $this->assertEquals("required1", $this->map($v->run(null)));
+        $this->assertEquals("required1", $this->map($v->run("non-array")));
+        $this->assertEquals("required1", $this->map($v->run(["wrong"=>''])));
+        $this->assertEquals("required1", $this->map($v->run(["req1"=>''])));
+        $this->assertEquals("required1", $this->map($v->run(["req2"=>''])));
+        $this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>''])));
+        $this->assertEquals("required1", $this->map($v->run(["req1"=>'',"req2"=>'1'])));
+        $this->assertEquals("", $this->map($v->run(["req1"=>'1',"req2"=>'1'])));
+    }
     public function testRequiredChain() {
         $v = new \vakata\validation\Validator();
         $v->required("req", "required")->numeric("numeric");
@@ -841,6 +854,28 @@ class ValidatorTest extends \PHPUnit\Framework\TestCase
         $v
             ->condition($i)
                 ->required('key.num', 'req');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1', 'num' => '']])));
+        $this->assertEquals("req", $this->map($v->run(['key'=>['name' => '1']])));
+    }
+    public function testDisabledNestedRelativeValidator()
+    {
+        $v = new \vakata\validation\Validator();
+        $i = new \vakata\validation\Validator();
+        $i
+            ->required('.name')->equals('1')
+            ->required('.name')->equals('2');
+        $v
+            ->condition($i)
+                ->required('key.num', 'req');
+        $this->assertEquals("", $this->map($v->run([])));
+        $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '']])));
+        $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1']])));
+        $i->rules('.name')[3]->disable();
         $this->assertEquals("", $this->map($v->run([])));
         $this->assertEquals("", $this->map($v->run(['key'=>'1'])));
         $this->assertEquals("", $this->map($v->run(['key'=>['name' => '1', 'num' => '2']])));
