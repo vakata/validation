@@ -172,7 +172,9 @@ class Validator implements JsonSerializable
                 continue;
             }
             foreach ($validators as $validator) {
-                $errors = array_merge($errors, $this->validate($key, $validator, $data, $context));
+                if ($validator->isEnabled()) {
+                    $errors = array_merge($errors, $this->validate($key, $validator, $data, $context));
+                }
             }
         }
         if (isset($this->validations['']) && count($this->validations[''])) {
@@ -190,7 +192,9 @@ class Validator implements JsonSerializable
                 if (!in_array($key, $this->checked)) {
                     // apply default validations to not checked
                     foreach ($this->validations[''] as $rule) {
-                        $errors = array_merge($errors, $this->validate($key, $rule, $data, $context));
+                        if ($rule->isEnabled()) {
+                            $errors = array_merge($errors, $this->validate($key, $rule, $data, $context));
+                        }
                     }
                 }
             }
