@@ -23,9 +23,6 @@
         "sort-packages" : true,
         "bin-compat": "full"
     },
-    "require-dev": {
-        "phpunit/phpunit" : "4.*"
-    },
     "autoload": {
         "psr-4": {
             "vakata\\validation\\": "src"

@@ -82,7 +82,7 @@ Add a required key to validate.
 public function required (  
     string $key,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -90,7 +90,7 @@ public function required (
 | `$key` | `string` | the key name |
 | `$message` | `string` | optional message to error with if the key is not present when running the validator |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -102,14 +102,14 @@ Add an optional key to validate - the validations that follow will only run if t
 ```php
 public function optional (  
     string $key  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$key` | `string` | the key name to look for |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -122,7 +122,7 @@ Add a validation rule in the form of a callable, it will receive the current key
 public function callback (  
     callable $handler,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -130,7 +130,7 @@ public function callback (
 | `$handler` | `callable` | the callable should return `true` if validation is OK and `false` otherwise |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -143,7 +143,7 @@ Add a validation using a regular expression
 public function regex (  
     string $regex,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -151,7 +151,7 @@ public function regex (
 | `$regex` | `string` | the regex to validate against |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -163,14 +163,14 @@ Add a numeric validation
 ```php
 public function numeric (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -183,7 +183,7 @@ Add an allowed chars validation
 public function chars (  
     string $chars,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -191,7 +191,7 @@ public function chars (
 | `$chars` | `string` | string of allowed chars |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -204,7 +204,7 @@ Add a latin chars validation
 public function latin (  
     bool $allowWhitespace,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -212,7 +212,7 @@ public function latin (
 | `$allowWhitespace` | `bool` | should white space characters be allowed |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -225,7 +225,7 @@ Add an alphabetical chars validation
 public function alpha (  
     bool $allowWhitespace,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -233,7 +233,7 @@ public function alpha (
 | `$allowWhitespace` | `bool` | should white space characters be allowed |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -246,7 +246,7 @@ Add an uppercase alphabetical chars validation
 public function upper (  
     bool $allowWhitespace,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -254,7 +254,7 @@ public function upper (
 | `$allowWhitespace` | `bool` | should white space characters be allowed |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -267,7 +267,7 @@ Add a lowercase alphabetical chars validation
 public function lower (  
     bool $allowWhitespace,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -275,7 +275,7 @@ public function lower (
 | `$allowWhitespace` | `bool` | should white space characters be allowed |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -288,7 +288,7 @@ Add a alphanumeric validation
 public function alphanumeric (  
     bool $allowWhitespace,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -296,7 +296,7 @@ public function alphanumeric (
 | `$allowWhitespace` | `bool` | should white space characters be allowed |
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -308,14 +308,14 @@ Add a not empty validation (fails on empty string)
 ```php
 public function notEmpty (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -327,14 +327,14 @@ Add a mail validation
 ```php
 public function mail (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -346,14 +346,14 @@ Add a float validation
 ```php
 public function float (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -365,14 +365,14 @@ Add an integer validation
 ```php
 public function int (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -385,7 +385,7 @@ Add a min integer validation
 public function min (  
     mixed $min,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -393,7 +393,7 @@ public function min (
 | `$min` | `mixed` | the minimum that the value should be equal to or greater than |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -406,7 +406,7 @@ Add a max integer validation
 public function max (  
     mixed $max,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -414,7 +414,7 @@ public function max (
 | `$max` | `mixed` | the minimum that the value should be equal to or less than |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -428,7 +428,7 @@ public function between (
     integer $min,  
     integer $max,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -437,7 +437,7 @@ public function between (
 | `$max` | `integer` | the maximum that the value should be equal to or less than |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -450,7 +450,7 @@ Add an equals validation
 public function equals (  
     integer $target,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -458,7 +458,7 @@ public function equals (
 | `$target` | `integer` | the value that the input should be equal to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -471,7 +471,7 @@ Add an exact length validation
 public function length (  
     integer $length,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -479,7 +479,7 @@ public function length (
 | `$length` | `integer` | the desired input length |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -492,7 +492,7 @@ Add a minimum length validation
 public function minLength (  
     integer $length,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -500,7 +500,7 @@ public function minLength (
 | `$length` | `integer` | the minimum desired input length |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -513,7 +513,7 @@ Add a maximum length validation
 public function maxLength (  
     integer $length,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -521,7 +521,7 @@ public function maxLength (
 | `$length` | `integer` | the maximum desired input length |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -534,7 +534,7 @@ Add an in array validation
 public function inArray (  
     array $target,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -542,7 +542,7 @@ public function inArray (
 | `$target` | `array` | array of allowed values |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -555,7 +555,7 @@ Add a date validation
 public function date (  
     array $format,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -563,7 +563,7 @@ public function date (
 | `$format` | `array` | the optional format to conform to (otherwise any strtotime compatible input is valid) |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -577,7 +577,7 @@ public function minDate (
     string|\DateTime|int $min,  
     string $format,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -586,7 +586,7 @@ public function minDate (
 | `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -600,7 +600,7 @@ public function maxDate (
     string|\DateTime|int $max,  
     string $format,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -609,7 +609,7 @@ public function maxDate (
 | `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -624,7 +624,7 @@ public function betweenDate (
     string|\DateTime|int $max,  
     string $format,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -634,7 +634,7 @@ public function betweenDate (
 | `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -649,7 +649,7 @@ public function age (
     string|\DateTime|int $rel,  
     string $format,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -659,7 +659,7 @@ public function age (
 | `$format` | `string` | the optional date format to conform to |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -671,14 +671,14 @@ Add a JSON validation
 ```php
 public function json (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -690,14 +690,14 @@ Add an IP address validation
 ```php
 public function ip (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -710,7 +710,7 @@ Add an URL validation
 public function url (  
     array|null $protocols,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -718,7 +718,7 @@ public function url (
 | `$protocols` | `array`, `null` | array of allowed protocols (defaults to ['http','https']) |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -730,14 +730,14 @@ Add a mod10 validation
 ```php
 public function mod10 (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -749,14 +749,14 @@ Add a imei validation
 ```php
 public function imei (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -769,7 +769,7 @@ Add credit card validation
 public function creditcard (  
     array|null $types,  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
@@ -777,7 +777,7 @@ public function creditcard (
 | `$types` | `array`, `null` | optional array of allowed cards (visa, mastercard, americanexpress, dinersclub, discover, jcb) |
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -789,14 +789,14 @@ Add an IBAN validation
 ```php
 public function iban (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -808,14 +808,14 @@ Add an UUID validation
 ```php
 public function uuid (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -827,14 +827,14 @@ Add a MAC validation
 ```php
 public function mac (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -846,14 +846,14 @@ Add a Bulgarian EGN validation
 ```php
 public function bgEGN (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -865,14 +865,14 @@ Add a Bulgarian LNC validation
 ```php
 public function bgLNC (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -884,14 +884,14 @@ Add a Bulgarian identification number validation (EGN or LNC)
 ```php
 public function bgIDN (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -903,14 +903,14 @@ Add a Bulgarian male EGN validation
 ```php
 public function bgMaleEGN (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -922,14 +922,14 @@ Add a Bulgarian female EGN validation
 ```php
 public function bgFemaleEGN (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -941,14 +941,14 @@ Add a Bulgarian BULSTAT validation
 ```php
 public function bgBulstat (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
@@ -960,14 +960,14 @@ Add a Bulgarian name validation
 ```php
 public function bgName (  
     string $message  
-) : self    
+) : static    
 ```
 
 |  | Type | Description |
 |-----|-----|-----|
 | `$message` | `string` | an optional message to include in the report if the validation fails |
 |  |  |  |
-| `return` | `self` |  |
+| `return` | `static` |  |
 
 ---
 
