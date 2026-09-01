@@ -53,7 +53,7 @@ class Rule
     {
         return $this->key;
     }
-    public function setKey(string $key): self
+    public function setKey(string $key): static
     {
         $this->key = $key;
         return $this;
@@ -87,32 +87,32 @@ class Rule
         return !$this->enabled;
     }
 
-    public function setMessage(string $message): self
+    public function setMessage(string $message): static
     {
         $this->message = $message;
         return $this;
     }
-    public function setData(array $data): self
+    public function setData(array $data): static
     {
         $this->data = $data;
         return $this;
     }
-    public function required(): self
+    public function required(): static
     {
         $this->optional = false;
         return $this;
     }
-    public function optional(): self
+    public function optional(): static
     {
         $this->optional = true;
         return $this;
     }
-    public function disable(): self
+    public function disable(): static
     {
         $this->enabled = false;
         return $this;
     }
-    public function enable(): self
+    public function enable(): static
     {
         $this->enabled = true;
         return $this;
@@ -122,7 +122,7 @@ class Rule
     {
         return $this->condition !== null;
     }
-    public function setCondition(?callable $condition = null): self
+    public function setCondition(?callable $condition = null): static
     {
         $this->condition = is_callable($condition) ? Closure::fromCallable($condition) : $condition;
         return $this;
@@ -136,7 +136,7 @@ class Rule
     {
         return $this->validator;
     }
-    public function setValidator(?Validator $validator = null): self
+    public function setValidator(?Validator $validator = null): static
     {
         $this->validator = $validator;
         return $this;
